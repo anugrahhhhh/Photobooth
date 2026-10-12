@@ -1,7 +1,7 @@
 # Photobooth Digital Berbasis Browser — Desain
 
 Tanggal: 2026-10-12
-Status: disetujui dalam sesi brainstorming, menunggu tinjauan spec
+Status: final (disetujui setelah tinjauan spec)
 
 ## 1. Tujuan dan cakupan
 
@@ -44,6 +44,10 @@ Belum ada tanggal acara, jadi target satu hari adalah fondasi yang benar. Pekerj
 Alur pengguna adalah **satu halaman** (`index.html`) yang berisi beberapa layar, sehingga stream kamera dan foto tetap ada di memori saat berpindah layar. Halaman admin dibuat terpisah.
 
 ```
+package.json             → "type": "module", skrip start/test/seed/backup
+.gitignore               → node_modules, .env, data, uploads, backups, *.db, *.db-wal, *.db-shm
+.env.example             → contoh env (di-commit; .env tidak)
+README.md                → env, seed, backup, deploy (lihat bagian 15)
 server.js                → Express: helmet, session, static, routes, error handler, SIGTERM
 config.js                → baca dan validasi env (gagal cepat)
 db/index.js              → koneksi, pragma, migrasi tabel (idempotent)
@@ -104,6 +108,8 @@ settings     key PRIMARY KEY, value
 sessions     (dikelola session store)
 ```
 
+**Pragma** (diatur di `db/index.js` setiap koneksi dibuka): `foreign_keys = ON`, `journal_mode = WAL`, `busy_timeout`.
+
 **Aturan data:**
 - Semua waktu disimpan sebagai string ISO 8601 UTC.
 - Indeks dibuat pada `session_logs(created_at)` dan `session_logs(template_id)`.
@@ -146,7 +152,7 @@ Semua error berbentuk `{ "error": "pesan" }`.
 | GET | `/api/templates` | Hanya template `active`: id, name, image_url, thumb_url, canvas_w, canvas_h, slots, bg_color |
 | GET | `/api/templates/:id` | Detail; 404 jika tidak `active` |
 | GET | `/api/settings` | `countdown_seconds`, `mirror_output` |
-| POST | `/api/sessions` | Body `{ template_id }` saja. Template harus `active`; `photo_count` diisi server. Rate limit sekitar 30 per 10 menit per IP |
+| POST | `/api/sessions` | Body `{ template_id }` saja. Template harus `active`; `photo_count` diisi server. Rate limit 120 per 10 menit per IP (konstanta `SESSION_LOG_LIMIT`), karena semua tamu di satu booth berbagi IP yang sama |
 | GET | `/healthz` | Health check |
 
 Respons tidak pernah memuat `image_path` atau `thumb_path`. Hanya URL yang dibentuk lewat `storage.urlFor`.
