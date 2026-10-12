@@ -16,6 +16,34 @@ export const FILTERS = [
       [0.272, 0.534, 0.131, 0],
     ],
   },
+  {
+    id: 'warm',
+    label: 'Hangat',
+    matrix: [
+      [1.1, 0, 0, 10],
+      [0, 1.02, 0, 5],
+      [0, 0, 0.9, -10],
+    ],
+  },
+  {
+    id: 'cool',
+    label: 'Dingin',
+    matrix: [
+      [0.9, 0, 0, -10],
+      [0, 1, 0, 0],
+      [0, 0, 1.1, 15],
+    ],
+  },
+  {
+    // Kontras 1,3 di sekitar abu tengah: offset = 128 × (1 − 1,3).
+    id: 'contrast',
+    label: 'Kontras',
+    matrix: [
+      [1.3, 0, 0, -38.4],
+      [0, 1.3, 0, -38.4],
+      [0, 0, 1.3, -38.4],
+    ],
+  },
 ];
 
 export function filterById(id) {

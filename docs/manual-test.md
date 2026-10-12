@@ -22,13 +22,15 @@ Isi tiap sel dengan ✅ (lolos), ❌ (gagal, tulis catatan di bawah), atau – (
 | 9 | Batal di tengah hitung mundur | ✅ (otomatis) | | | |
 | 10 | Ganti template 3→2 slot (konfirmasi) dan 2→3 slot (lanjut foto slot ke-3) | ✅ (otomatis) | | | |
 | 11 | Geser, cubit, slider, dan tombol −/+ zoom; foto tidak pernah memperlihatkan latar di slot | ✅ geser/slider/tombol (otomatis) | | | |
-| 12 | Filter Normal, Hitam putih, Sepia | ✅ (otomatis) | | | |
+| 12 | Filter Normal, Hitam putih, Sepia, Hangat, Dingin, Kontras | ✅ Hitam putih (otomatis) | | | |
+| 12a | Zoom dengan roda mouse di layar Atur (desktop) | ✅ (otomatis, WheelEvent) | | – | – |
 | 13 | Unduh: file JPEG tersimpan, nama `photobooth-YYYYMMDD-HHmmss.jpg` | ✅ (otomatis) | | | |
 | 14 | Berbagi (lembar share) di ponsel, termasuk membatalkan lembar share (tidak ada pesan error) | – | – | | |
 | 15 | Unggah dari galeri, termasuk foto potret dengan orientasi EXIF | ✅ JPEG/PNG (otomatis) | | | |
 | 16 | File HEIC atau rusak: pesan per file | ✅ file rusak (otomatis) | | | |
 | 17 | Browser dalam aplikasi (buka link dari Instagram/WhatsApp/Line): banner "Buka di Chrome/Safari" | – | – | | |
 | 18 | Admin: login, unggah template, aktifkan, template tampil di booth — lewat tunnel (cek Origin) | | | | |
+| 18a | Admin: deteksi slot otomatis dari PNG (indikator "Sedang memproses", peringatan 0 atau >8 area) | ✅ 2 slot (otomatis) | | | |
 | 19 | Aset tidak diblokir CSP di HTTP lokal dan di tunnel (Review Focus 5); tidak ada error di konsol | ✅ HTTP lokal (otomatis) | | | |
 | 20 | Hasil sesuai pengaturan cermin (`mirror_output` 0 dan 1) untuk kamera depan | | | | |
 

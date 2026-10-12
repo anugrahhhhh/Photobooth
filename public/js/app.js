@@ -578,6 +578,17 @@ function initAdjust() {
   canvas.addEventListener('pointerup', end);
   canvas.addEventListener('pointercancel', end);
 
+  canvas.addEventListener(
+    'wheel',
+    (e) => {
+      const tr = state.transforms[selected];
+      if (!tr) return;
+      e.preventDefault();
+      setZoom(tr.zoom * Math.exp(-e.deltaY * 0.001));
+    },
+    { passive: false },
+  );
+
   $('#zoom').addEventListener('input', (e) => setZoom(Number(e.target.value)));
   $('#zoom-in').addEventListener('click', () => setZoom((state.transforms[selected]?.zoom ?? 1) + 0.1));
   $('#zoom-out').addEventListener('click', () => setZoom((state.transforms[selected]?.zoom ?? 1) - 0.1));

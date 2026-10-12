@@ -2,6 +2,7 @@ import { ApiError, getJSON, sendJSON, sendForm } from '../js/api.js';
 import { render } from '../js/strip.js';
 import { previewScale } from '../js/geometry.js';
 import { validateCanvas, validateSlots, MAX_SLOTS } from '../js/slots.js';
+import { detectSlots } from '../js/detect-slots.js';
 
 const LOGIN_URL = '/admin/login.html';
 const STATUS_LABEL = { active: 'Aktif', inactive: 'Nonaktif', archived: 'Arsip' };
@@ -224,6 +225,17 @@ function samplePhoto(i) {
   return c;
 }
 
+function readAlpha(img, w, h) {
+  const c = el('canvas', { width: w, height: h });
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, w, h);
+  const rgba = ctx.getImageData(0, 0, w, h).data;
+  const alpha = new Uint8Array(w * h);
+  for (let i = 0; i < alpha.length; i++) alpha[i] = rgba[i * 4 + 3];
+  c.width = c.height = 0;
+  return alpha;
+}
+
 function loadImageFromUrl(url) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -305,6 +317,31 @@ async function initEdit() {
     changed();
   });
 
+  $('#detect-slots').addEventListener('click', async () => {
+    const detectStatus = $('#detect-status');
+    const btn = $('#detect-slots');
+    btn.disabled = true;
+    setStatus(detectStatus, 'Sedang memproses…');
+    // Beri kesempatan indikator tergambar sebelum pekerjaan berat di thread utama.
+    await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+    try {
+      const found = detectSlots(readAlpha(state.img, state.canvas_w, state.canvas_h), state.canvas_w, state.canvas_h);
+      if (found.length === 0) {
+        setStatus(detectStatus, 'Tidak ada area transparan yang cukup besar. Isi slot secara manual.', 'error');
+      } else if (found.length > MAX_SLOTS) {
+        setStatus(detectStatus, `Terdeteksi ${found.length} area, lebih dari ${MAX_SLOTS}. Daftar slot tidak diubah.`, 'error');
+      } else {
+        state.slots = found;
+        setStatus(detectStatus, `${found.length} slot terdeteksi. Periksa urutannya sebelum menyimpan.`, 'ok');
+        changed();
+      }
+    } catch (err) {
+      setStatus(detectStatus, `Deteksi gagal: ${err.message}`, 'error');
+    } finally {
+      btn.disabled = !state.img;
+    }
+  });
+
   function renderSlotRows() {
     const { slotErrors, overlaps } = state.validation;
     const overlapping = new Set(overlaps.flat());
@@ -345,6 +382,7 @@ async function initEdit() {
     });
     slotList.replaceChildren(...rows);
     $('#add-slot').disabled = state.slots.length >= MAX_SLOTS || !state.img;
+    $('#detect-slots').disabled = !state.img;
   }
 
   // Tandai baris tanpa membangun ulang input (agar fokus tidak hilang saat mengetik).

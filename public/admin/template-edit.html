@@ -49,7 +49,11 @@
               <span>#</span><span>x</span><span>y</span><span>w</span><span>h</span><span></span>
             </div>
             <div id="slot-list"></div>
-            <button type="button" id="add-slot" class="small">+ Tambah slot</button>
+            <div class="row">
+              <button type="button" id="add-slot" class="small">+ Tambah slot</button>
+              <button type="button" id="detect-slots" class="small">Deteksi slot otomatis</button>
+            </div>
+            <p id="detect-status" class="status-msg" role="status"></p>
           </fieldset>
 
           <ul id="messages" class="messages" aria-live="polite"></ul>
