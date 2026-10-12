@@ -42,4 +42,15 @@ Admin: `http://localhost:3000/admin`.
 
 ## Deploy
 
+**Di balik reverse proxy** (nginx dan sejenisnya), di produksi server memakai `trust proxy` dan butuh header berikut. Tanpa header ini, login admin gagal: `checkOrigin` menolak dengan 403 atau cookie `secure` tidak terpasang.
+
+```nginx
+proxy_set_header Host $host;
+proxy_set_header X-Forwarded-Host $host;
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+```
+
+Reset password lewat `seed:admin -- --reset` langsung mengakhiri semua sesi user itu.
+
 ## Catatan kamera

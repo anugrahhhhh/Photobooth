@@ -113,3 +113,42 @@ test('admin: mutasi tanpa Origin → 403 walau sudah login', async () => {
   const res = await agent.post('/api/admin/anything').set('Host', 'booth.test');
   assert.equal(res.status, 403);
 });
+
+test('reset password mengakhiri sesi user itu', async () => {
+  const agent = await loginAgent(ctx.app, ctx.db);
+  await seedAdmin(ctx.db, { ...ADMIN, password: 'passwordBaru1', reset: true });
+  assert.equal((await agent.get('/api/auth/me')).status, 401);
+});
+
+test('user yang dihapus dari DB tidak lagi dianggap login', async () => {
+  const agent = await loginAgent(ctx.app, ctx.db);
+  ctx.db.prepare('DELETE FROM users').run();
+  assert.equal((await agent.get('/api/auth/me')).status, 401);
+  assert.equal((await agent.get('/api/admin/templates')).status, 401);
+});
+
+test('seedAdmin --reset tetap jalan saat tabel sessions belum ada', async () => {
+  const { openDb } = await import('../db/index.js');
+  const db = openDb(':memory:');
+  await seedAdmin(db, ADMIN);
+  await seedAdmin(db, { ...ADMIN, password: 'passwordBaru1', reset: true });
+});
+
+test('produksi di balik proxy: X-Forwarded-Host/Proto → login, cookie Secure, /me 200', async () => {
+  const prod = await makeTestApp({ env: { NODE_ENV: 'production', SESSION_SECRET: 's'.repeat(40) } });
+  try {
+    await seedAdmin(prod.db, ADMIN);
+    const viaProxy = (req) =>
+      req.set('Host', 'localhost:3000').set('X-Forwarded-Host', 'booth.example').set('X-Forwarded-Proto', 'https');
+    const res = await viaProxy(request(prod.app).post('/api/auth/login')).set('Origin', 'https://booth.example').send(ADMIN);
+    assert.equal(res.status, 200);
+    const cookie = res.headers['set-cookie'][0];
+    assert.match(cookie, /Secure/);
+    const me = await viaProxy(request(prod.app).get('/api/auth/me')).set('Cookie', cookie.split(';')[0]);
+    assert.equal(me.status, 200);
+    const direct = await request(prod.app).post('/api/auth/login').set('Host', 'localhost:3000').set('Origin', 'https://booth.example').send(ADMIN);
+    assert.equal(direct.status, 403, 'tanpa X-Forwarded-Host, Origin publik tidak cocok');
+  } finally {
+    prod.cleanup();
+  }
+});

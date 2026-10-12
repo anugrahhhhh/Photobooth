@@ -39,6 +39,7 @@ function noStore(req, res, next) {
 export function createApp({ config, db, storage, now = () => new Date(), extraRoutes }) {
   const app = express();
   app.locals.now = now;
+  app.locals.db = db;
 
   if (config.isProd) app.set('trust proxy', 1);
 

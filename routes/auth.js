@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import { rateLimit } from 'express-rate-limit';
 import { BCRYPT_COST } from '../db/seed-admin.js';
+import { currentAdmin } from '../middleware/requireAdmin.js';
 
 const LOGIN_FAILED = 'Username atau password salah';
 
@@ -29,7 +30,6 @@ export function authRouter({ db }) {
     req.session.regenerate((err) => {
       if (err) return next(err);
       req.session.userId = user.id;
-      req.session.username = user.username;
       res.json({ username: user.username });
     });
   });
@@ -43,8 +43,9 @@ export function authRouter({ db }) {
   });
 
   router.get('/me', (req, res) => {
-    if (!req.session.userId) return res.status(401).json({ error: 'Silakan login' });
-    res.json({ username: req.session.username });
+    const user = currentAdmin(req);
+    if (!user) return res.status(401).json({ error: 'Silakan login' });
+    res.json({ username: user.username });
   });
 
   return router;

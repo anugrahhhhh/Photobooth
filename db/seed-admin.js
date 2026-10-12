@@ -16,6 +16,10 @@ export async function seedAdmin(db, { username, password, reset = false }) {
   if (reset) {
     if (!existing) throw new Error(`User "${username}" tidak ditemukan`);
     db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, existing.id);
+    // Akhiri semua sesi user ini. Tabel sessions dibuat oleh session store saat server jalan.
+    if (db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'sessions'").get()) {
+      db.prepare("DELETE FROM sessions WHERE json_extract(sess, '$.userId') = ?").run(existing.id);
+    }
   } else {
     if (existing) throw new Error(`User "${username}" sudah ada; pakai --reset untuk mengganti password`);
     db.prepare("INSERT INTO users (username, password_hash, role, created_at) VALUES (?, ?, 'admin', ?)").run(
