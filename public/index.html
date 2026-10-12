@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#d6336c" />
+    <title>Photobooth</title>
+    <link rel="stylesheet" href="/css/app.css" />
+    <script type="module" src="/js/app.js"></script>
+  </head>
+  <body class="booth-app">
+    <header class="topbar">
+      <ol class="progress" id="progress" aria-label="Langkah">
+        <li data-step="pick">Template</li>
+        <li data-step="booth">Foto</li>
+        <li data-step="adjust">Atur</li>
+        <li data-step="result">Unduh</li>
+      </ol>
+    </header>
+
+    <!-- Beranda -->
+    <section class="screen" id="screen-home">
+      <div class="inapp-banner card" id="inapp-banner" hidden>
+        <p><strong>Buka di Chrome atau Safari</strong> agar kamera dan unduhan berjalan lancar.</p>
+        <div class="row">
+          <input id="inapp-link" readonly aria-label="Link halaman ini" />
+          <button type="button" id="inapp-copy" class="small">Salin link</button>
+          <button type="button" id="inapp-close" class="small">Tutup</button>
+        </div>
+      </div>
+      <div class="hero">
+        <h1>Photobooth</h1>
+        <p>Pilih bingkai, berpose, lalu unduh photostrip-mu.</p>
+        <button type="button" class="primary big" id="start">Mulai</button>
+      </div>
+    </section>
+
+    <!-- Pilih template -->
+    <section class="screen" id="screen-pick" hidden>
+      <div class="screen-head">
+        <h2 id="pick-title">Pilih template</h2>
+        <button type="button" id="pick-back" class="small" hidden>Kembali</button>
+      </div>
+      <p class="status-msg" id="pick-status" role="status"></p>
+      <button type="button" id="pick-retry" hidden>Coba lagi</button>
+      <div class="template-grid" id="template-grid"></div>
+    </section>
+
+    <!-- Booth -->
+    <section class="screen" id="screen-booth" hidden>
+      <div class="booth">
+        <div class="viewfinder" id="viewfinder">
+          <video id="video" playsinline muted autoplay></video>
+          <div class="countdown" id="countdown" hidden aria-live="assertive"></div>
+          <div class="flash" id="flash"></div>
+          <div class="camera-error card" id="camera-error" hidden>
+            <p id="camera-error-msg"></p>
+            <div class="row">
+              <button type="button" id="camera-retry" class="small">Coba lagi</button>
+              <label class="button small primary gallery-button">
+                Pilih dari galeri
+                <input type="file" accept="image/*" multiple class="gallery-input" />
+              </label>
+            </div>
+          </div>
+        </div>
+        <p class="slot-label" id="slot-label"></p>
+        <div class="booth-controls">
+          <button type="button" class="primary big" id="shoot">Ambil foto</button>
+          <button type="button" class="big danger" id="cancel" hidden>Batal</button>
+        </div>
+        <div class="booth-tools">
+          <button type="button" id="flip" class="small" hidden>Balik kamera</button>
+          <select id="camera-select" hidden aria-label="Pilih kamera"></select>
+          <button type="button" id="fullscreen" class="small" hidden>Layar penuh</button>
+          <label class="button small gallery-button">
+            Unggah dari galeri
+            <input type="file" accept="image/*" multiple class="gallery-input" />
+          </label>
+          <button type="button" id="booth-to-adjust" class="small" hidden>Selesai</button>
+        </div>
+        <ul class="messages" id="gallery-errors"></ul>
+      </div>
+    </section>
+
+    <!-- Atur -->
+    <section class="screen" id="screen-adjust" hidden>
+      <div class="adjust">
+        <div class="adjust-stage" id="adjust-stage">
+          <canvas id="adjust-canvas" aria-label="Pratinjau photostrip. Ketuk slot untuk memilih, geser untuk mengatur posisi."></canvas>
+        </div>
+        <div class="adjust-panel">
+          <p class="hint" id="adjust-hint">Ketuk foto untuk memilih, geser untuk mengatur, cubit untuk zoom.</p>
+          <div class="zoom-row">
+            <button type="button" id="zoom-out" class="small" aria-label="Perkecil">−</button>
+            <input type="range" id="zoom" min="1" max="3" step="0.01" value="1" aria-label="Zoom" />
+            <button type="button" id="zoom-in" class="small" aria-label="Perbesar">+</button>
+          </div>
+          <div class="filters" id="filters" role="radiogroup" aria-label="Filter"></div>
+          <div class="row">
+            <button type="button" id="retake" class="small">Ulang foto ini</button>
+            <button type="button" id="change-template" class="small">Ganti template</button>
+          </div>
+          <button type="button" class="primary big" id="to-result">Lanjut</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hasil -->
+    <section class="screen" id="screen-result" hidden>
+      <div class="result">
+        <img id="result-img" alt="Hasil photostrip" />
+        <div class="result-actions">
+          <button type="button" class="primary big" id="download" disabled>Menyiapkan...</button>
+          <div class="row">
+            <button type="button" id="back-to-adjust" class="small">Atur lagi</button>
+            <button type="button" id="restart" class="small">Ulang sesi</button>
+            <button type="button" id="new-session" class="small">Sesi baru</button>
+          </div>
+          <p class="status-msg" id="result-status" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cadangan iOS lama: tekan lama untuk menyimpan -->
+    <div class="save-overlay" id="save-overlay" hidden>
+      <p>Tekan lama gambar lalu pilih <strong>Simpan</strong>.</p>
+      <img id="save-overlay-img" alt="Photostrip untuk disimpan" />
+      <button type="button" id="save-overlay-close" class="big">Tutup</button>
+    </div>
+  </body>
+</html>

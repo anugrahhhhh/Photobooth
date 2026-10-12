@@ -53,4 +53,25 @@ proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
 Reset password lewat `seed:admin -- --reset` langsung mengakhiri semua sesi user itu.
 
+**Syarat lain:**
+- **HTTPS wajib.** Browser hanya mengizinkan kamera di HTTPS (atau `localhost`). Tanpa HTTPS, booth menampilkan pesan "Kamera hanya bisa dipakai jika situs dibuka lewat HTTPS".
+- **Satu instance saja.** SQLite dan folder uploads ada di disk lokal. Pastikan platform tidak menjalankan dua instance bersamaan pada volume yang sama, termasuk saat deploy bergulir.
+- **Disk persisten** untuk `DB_PATH` dan `UPLOAD_DIR` (Railway, Fly.io, Render dengan disk, atau VPS). Vercel, Netlify, dan sejenisnya tidak bisa dipakai.
+- **Nginx:** `client_max_body_size 6m;` (PNG template maksimal 5 MB ditambah thumbnail).
+- **Penyimpanan di domain lain** (misalnya pindah ke object storage nanti): domain itu wajib mengirim header CORS (`Access-Control-Allow-Origin`), karena gambar template dimuat dengan `crossOrigin = 'anonymous'` agar hasil bisa diekspor dari canvas.
+
+**Uji dari ponsel saat pengembangan:**
+
+```bash
+npm start
+cloudflared tunnel --url http://localhost:3000   # atau: ngrok http 3000
+```
+
+Checklist uji lintas perangkat ada di [docs/manual-test.md](docs/manual-test.md).
+
 ## Catatan kamera
+
+- Webcam laptop selalu memberi frame lanskap. Untuk slot potret 1100×1700 dari frame 1920×1080, area yang terpakai hanya sekitar **699×1080**, sehingga foto diperbesar sekitar 1,6 kali dan terlihat kurang tajam.
+- Ponsel dalam posisi potret biasanya memberi frame potret, jadi masalah ini tidak terjadi di sana.
+- **Saran untuk admin:** pakai slot lanskap jika booth memakai webcam laptop.
+- Pratinjau kamera depan selalu dicermin. Hasil foto dicermin hanya jika "Cerminkan hasil foto kamera depan" aktif di dashboard. Kamera belakang dan foto dari galeri tidak pernah dicermin.
