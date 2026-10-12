@@ -3,7 +3,7 @@ import * as camera from './camera.js';
 import { cameraErrorMessage, isFrontCamera, createRestartPolicy } from './camera.js';
 import { FILTERS, filteredCanvas } from './filters.js';
 import { clampTransform, clientToTemplate, fitWithin, hitSlot, previewScale, MIN_ZOOM, MAX_ZOOM } from './geometry.js';
-import { createState, changeTemplate, wouldDrop, nextEmptySlot, resetPhotos, resetAll, releaseCanvas } from './state.js';
+import { createState, changeTemplate, wouldDrop, nextEmptySlot, resetPhotos, resetAll, releaseCanvas, latestOnly } from './state.js';
 import { render, loadTemplateImage } from './strip.js';
 
 const MAX_PHOTO_SIDE = 1920;
@@ -33,6 +33,7 @@ const STEPS = ['pick', 'booth', 'adjust', 'result'];
 
 function show(next) {
   if (screen === 'booth' && next !== 'booth') leaveBooth();
+  if (screen === 'pick' && next !== 'pick') picking.cancel();
   screen = next;
   for (const s of $$('.screen')) s.hidden = s.id !== `screen-${next}`;
   const idx = STEPS.indexOf(next);
@@ -73,6 +74,11 @@ function initHome() {
 /* ---------- Pilih template ---------- */
 
 let pickMode = 'start';
+const picking = latestOnly();
+
+function setGridBusy(busy) {
+  for (const card of $$('.template-card')) card.disabled = busy;
+}
 
 function openPicker(mode) {
   pickMode = mode;
@@ -105,7 +111,7 @@ async function loadTemplates() {
           el('span', {}, t.name),
           el('small', {}, `${t.slots.length} foto`),
         );
-        card.addEventListener('click', () => pickTemplate(t, card));
+        card.addEventListener('click', () => pickTemplate(t));
         return card;
       }),
     );
@@ -116,11 +122,17 @@ async function loadTemplates() {
   }
 }
 
-async function pickTemplate(t, card) {
+async function pickTemplate(t) {
+  if (picking.pending()) return; // satu template dimuat dalam satu waktu
+  const token = picking.begin();
   const status = $('#pick-status');
-  card.disabled = true;
+  status.className = 'status-msg';
+  status.textContent = `Memuat "${t.name}"…`;
+  setGridBusy(true);
   try {
     const img = await loadTemplateImage(t.image_url);
+    if (!picking.isCurrent(token) || screen !== 'pick') return; // sudah ditinggalkan
+    status.textContent = '';
     if (pickMode === 'change') {
       const n = wouldDrop(state, t);
       if (n > 0 && !confirm(`Template ini hanya punya ${t.slots.length} slot. ${n} foto terakhir akan dibuang. Lanjutkan?`)) return;
@@ -134,10 +146,12 @@ async function pickTemplate(t, card) {
     boothTarget = null;
     show(nextEmptySlot(state) >= 0 ? 'booth' : 'adjust');
   } catch (err) {
+    if (!picking.isCurrent(token)) return;
     status.textContent = err.message;
     status.className = 'status-msg error';
   } finally {
-    card.disabled = false;
+    picking.done(token);
+    setGridBusy(false);
   }
 }
 
@@ -194,19 +208,28 @@ function showCameraError(message) {
   $('#shoot').disabled = true;
 }
 
+function setCameraSwitching(busy) {
+  $('#flip').disabled = busy;
+  $('#camera-select').disabled = busy;
+}
+
 async function startCamera(pref) {
   $('#camera-error').hidden = true;
   $('#shoot').disabled = true;
+  setCameraSwitching(true);
   const saved = camera.savedCameraId();
   const usePref = pref ?? (saved ? { deviceId: saved } : { facingMode: state.facingRequested });
   try {
     const info = await camera.start($('#video'), usePref);
+    if (!info) return; // tersusul oleh start lain; yang terbaru yang mengurus tampilan
+    setCameraSwitching(false);
     cameraInfo = { ...info, pickedByDeviceId: Boolean(usePref.deviceId) && !info.usedFallback };
     restartPolicy.success();
     $('#shoot').disabled = false;
     updateBoothView();
     await refreshCameraList();
   } catch (err) {
+    setCameraSwitching(false);
     cameraInfo = null;
     showCameraError(cameraErrorMessage(err));
   }
@@ -621,10 +644,16 @@ function timestamp(d = new Date()) {
 async function prepareResult() {
   const job = ++preparing;
   const t = state.template;
-  const full = state.photos.map((p) => (p ? filteredCanvas(p, state.filter) : null)); // null untuk Normal
   const canvas = el('canvas');
-  render(canvas, { template: t, img: templateImg, photos: state.photos, transforms: state.transforms, filtered: full, scale: 1 });
-  full.forEach(releaseCanvas);
+  // Salinan tersaring resolusi penuh dibuat dan dilepas satu per slot (null untuk Normal).
+  render(canvas, {
+    template: t,
+    img: templateImg,
+    photos: state.photos,
+    transforms: state.transforms,
+    scale: 1,
+    mapPhoto: (p) => filteredCanvas(p, state.filter),
+  });
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
   releaseCanvas(canvas);
   if (job !== preparing) return; // sudah ada permintaan lebih baru

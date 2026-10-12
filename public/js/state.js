@@ -59,3 +59,24 @@ export function resetAll(state) {
   state.transforms = [];
   state.filter = 'normal';
 }
+
+// Token "permintaan terakhir": hasil async dari permintaan lama diabaikan.
+export function latestOnly() {
+  let current = 0;
+  let active = false;
+  return {
+    begin() {
+      active = true;
+      return ++current;
+    },
+    isCurrent: (token) => token === current,
+    done(token) {
+      if (token === current) active = false;
+    },
+    cancel() {
+      current++;
+      active = false;
+    },
+    pending: () => active,
+  };
+}

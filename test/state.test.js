@@ -98,3 +98,19 @@ test('resetAll melepas semua canvas dan mengosongkan template serta filter', () 
   assert.equal(s.filter, 'normal');
   assert.deepEqual(s.settings, { countdown_seconds: 3, mirror_output: 0 }, 'pengaturan tetap');
 });
+
+test('latestOnly: hanya permintaan terakhir yang masih berlaku', async () => {
+  const { latestOnly } = await import('../public/js/state.js');
+  const latest = latestOnly();
+  const a = latest.begin();
+  const b = latest.begin();
+  assert.equal(latest.isCurrent(a), false);
+  assert.equal(latest.isCurrent(b), true);
+  latest.cancel();
+  assert.equal(latest.isCurrent(b), false);
+  assert.equal(latest.pending(), false);
+  const c = latest.begin();
+  assert.equal(latest.pending(), true);
+  latest.done(c);
+  assert.equal(latest.pending(), false);
+});
