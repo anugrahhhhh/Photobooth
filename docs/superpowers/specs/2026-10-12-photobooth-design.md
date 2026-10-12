@@ -76,7 +76,11 @@ public/
   js/api.js              → fetch helper
   admin/login.html, dashboard.html, template-edit.html, admin.js
 docs/manual-test.md      → checklist uji lintas perangkat
+test/                    → tes node:test + supertest; helpers.js (createApp dengan DB :memory:), fixtures/
+lib/http-error.js        → HttpError(status, message), dipetakan oleh error handler
 ```
+
+`server.js` mengekspor `createApp({ config, db, storage, now })` dan hanya memanggil `listen` bila dijalankan langsung, sehingga tes bisa membangun app tanpa membuka port.
 
 ## 4. Konfigurasi
 
@@ -442,9 +446,9 @@ Pan selalu dibatasi lewat `geometry.js` agar foto tetap menutupi seluruh slot, t
 
 **Wajib**, dikerjakan berurutan:
 1. Fondasi server dan keamanan: config, database, session, auth, middleware, storage, seed.
-2. Admin CRUD template dengan form slot, pratinjau, dan pengaturan (agar ada template sungguhan).
+2. Admin CRUD template dengan form slot, pratinjau, pengaturan, dan **thumbnail** (agar ada template sungguhan). Thumbnail masuk tahap ini karena `POST /api/admin/templates` mewajibkan `thumb`.
 3. Alur pengguna: kamera, booth, Atur, render, dan unduh. `seed-sample.js` mempercepat langkah ini.
-4. Thumbnail.
+4. Butir "kalau sempat" di bawah.
 
 **Kalau sempat:**
 - deteksi slot otomatis
