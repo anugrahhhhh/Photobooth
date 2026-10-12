@@ -93,3 +93,11 @@ test('JSON rusak → 400 JSON', async () => {
   assert.equal(res.status, 400);
   assert.equal(typeof res.body.error, 'string');
 });
+
+test('GET /admin dan /admin/ → redirect ke dashboard', async () => {
+  for (const url of ['/admin', '/admin/']) {
+    const res = await request(app).get(url);
+    assert.equal(res.status, 302, url);
+    assert.equal(res.headers.location, '/admin/dashboard.html');
+  }
+});

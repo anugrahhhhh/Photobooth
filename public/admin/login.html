@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login Admin — Photobooth</title>
+    <link rel="stylesheet" href="/css/app.css" />
+    <script type="module" src="/admin/admin.js"></script>
+  </head>
+  <body data-page="login">
+    <main class="login-wrap">
+      <form id="login-form" class="card" novalidate>
+        <h1>Admin Photobooth</h1>
+        <label>
+          Username
+          <input name="username" autocomplete="username" required autofocus />
+        </label>
+        <label>
+          Password
+          <input name="password" type="password" autocomplete="current-password" required />
+        </label>
+        <button type="submit" class="primary">Masuk</button>
+        <p id="login-status" class="status-msg" role="alert"></p>
+      </form>
+    </main>
+  </body>
+</html>

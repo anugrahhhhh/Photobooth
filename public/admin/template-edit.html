@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Editor Template — Photobooth</title>
+    <link rel="stylesheet" href="/css/app.css" />
+    <script type="module" src="/admin/admin.js"></script>
+  </head>
+  <body data-page="edit">
+    <main class="admin">
+      <header class="admin-header">
+        <h1 id="title">Template baru</h1>
+        <nav>
+          <a class="button" href="/admin/dashboard.html">← Dashboard</a>
+        </nav>
+      </header>
+
+      <div class="editor">
+        <form id="editor" class="card editor-form" novalidate>
+          <label>
+            File PNG template (bagian slot harus transparan)
+            <input name="image" type="file" accept="image/png" />
+          </label>
+          <div class="row">
+            <label>
+              Lebar kanvas (px)
+              <input name="canvas_w" readonly tabindex="-1" />
+            </label>
+            <label>
+              Tinggi kanvas (px)
+              <input name="canvas_h" readonly tabindex="-1" />
+            </label>
+          </div>
+          <div class="row">
+            <label>
+              Nama
+              <input name="name" maxlength="100" required />
+            </label>
+            <label>
+              Warna latar
+              <input name="bg_color" type="color" value="#ffffff" />
+            </label>
+          </div>
+
+          <fieldset class="slots">
+            <legend>Slot foto (urutan = urutan pengambilan, maksimal 8)</legend>
+            <div class="slot-row slot-head" aria-hidden="true">
+              <span>#</span><span>x</span><span>y</span><span>w</span><span>h</span><span></span>
+            </div>
+            <div id="slot-list"></div>
+            <button type="button" id="add-slot" class="small">+ Tambah slot</button>
+          </fieldset>
+
+          <ul id="messages" class="messages" aria-live="polite"></ul>
+
+          <div class="row">
+            <button type="submit" id="save" class="primary" disabled>Simpan</button>
+            <button type="button" id="activate" disabled>Aktifkan</button>
+          </div>
+          <p id="status" class="status-msg" role="status"></p>
+        </form>
+
+        <section class="card preview-wrap" aria-label="Pratinjau">
+          <h2>Pratinjau</h2>
+          <canvas id="preview" width="0" height="0"></canvas>
+          <p class="status-msg">Kotak berwarna bernomor menandai isi slot. Merah = error, kuning = tumpang tindih.</p>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

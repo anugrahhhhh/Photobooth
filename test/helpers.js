@@ -5,6 +5,7 @@ import { loadConfig } from '../config.js';
 import { openDb } from '../db/index.js';
 import { createStorage } from '../storage/index.js';
 import { createApp } from '../server.js';
+import { encodePng } from '../db/seed-sample.js';
 
 export const HOST = 'booth.test';
 export const ORIGIN = 'http://booth.test';
@@ -67,4 +68,54 @@ export function fakeJpeg(width, height, { sof = 0xc0, before = [], size } = {}) 
     Buffer.from([0xff, 0xda, 0x00, 0x02]),
   ]);
   return size && size > head.length ? Buffer.concat([head, Buffer.alloc(size - head.length)]) : head;
+}
+
+export const TEST_TEMPLATE = {
+  name: 'Strip uji',
+  canvas_w: 300,
+  canvas_h: 400,
+  bg_color: '#ffeedd',
+  slots: [
+    { x: 10, y: 10, w: 280, h: 180 },
+    { x: 10, y: 210, w: 280, h: 180 },
+  ],
+};
+
+const pngCache = new Map();
+export function testPng(w = TEST_TEMPLATE.canvas_w, h = TEST_TEMPLATE.canvas_h) {
+  const key = `${w}x${h}`;
+  if (!pngCache.has(key)) pngCache.set(key, encodePng(w, h, () => [200, 100, 100, 255]));
+  return pngCache.get(key);
+}
+
+// Request multipart template. File dikirim sebelum field teks bila filesFirst.
+// image/thumb: undefined = default valid, null = tidak dikirim.
+export function templateForm(req, { fields = {}, image, thumb, filesFirst = false, omit = [] } = {}) {
+  const f = {
+    name: TEST_TEMPLATE.name,
+    canvas_w: String(TEST_TEMPLATE.canvas_w),
+    canvas_h: String(TEST_TEMPLATE.canvas_h),
+    bg_color: TEST_TEMPLATE.bg_color,
+    slots: JSON.stringify(TEST_TEMPLATE.slots),
+    ...fields,
+  };
+  const addFields = () => {
+    for (const [k, v] of Object.entries(f)) if (!omit.includes(k)) req = req.field(k, v);
+  };
+  const addFiles = () => {
+    if (image !== null) req = req.attach('image', image ?? testPng(), 'template.png');
+    if (thumb !== null) req = req.attach('thumb', thumb ?? fakeJpeg(150, 200), 'thumb.jpg');
+  };
+  if (filesFirst) {
+    addFiles();
+    addFields();
+  } else {
+    addFields();
+    addFiles();
+  }
+  return req;
+}
+
+export function listDir(dir) {
+  return fs.existsSync(dir) ? fs.readdirSync(dir) : [];
 }

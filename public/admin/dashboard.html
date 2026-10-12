@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard — Photobooth</title>
+    <link rel="stylesheet" href="/css/app.css" />
+    <script type="module" src="/admin/admin.js"></script>
+  </head>
+  <body data-page="dashboard">
+    <main class="admin">
+      <header class="admin-header">
+        <h1>Dashboard</h1>
+        <nav>
+          <a class="button primary" href="/admin/template-edit.html">+ Template baru</a>
+          <a class="button" href="/" target="_blank" rel="noopener">Buka booth</a>
+          <button type="button" id="logout">Keluar</button>
+        </nav>
+      </header>
+
+      <p id="status" class="status-msg" role="status"></p>
+
+      <section class="stats" aria-label="Statistik">
+        <div class="card stat">
+          <div class="value" id="stat-today">–</div>
+          <div class="label">Sesi hari ini</div>
+        </div>
+        <div class="card stat">
+          <div class="value" id="stat-active">–</div>
+          <div class="label">Template aktif</div>
+        </div>
+        <div class="card stat">
+          <div class="value" id="stat-inactive">–</div>
+          <div class="label">Nonaktif · <span id="stat-archived">–</span> arsip</div>
+        </div>
+        <div class="card stat">
+          <div class="label">Terpopuler</div>
+          <ol id="stat-top"></ol>
+          <p id="stat-top-empty" class="label">Belum ada sesi</p>
+        </div>
+      </section>
+
+      <section class="card section">
+        <h2>Template</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Gambar</th>
+                <th>Nama</th>
+                <th>Ukuran</th>
+                <th>Slot</th>
+                <th>Status</th>
+                <th>Dipakai</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="templates"></tbody>
+          </table>
+        </div>
+        <p id="templates-empty" class="status-msg" hidden>Belum ada template. Buat template baru untuk memulai.</p>
+      </section>
+
+      <section class="card section">
+        <h2>Pengaturan</h2>
+        <form id="settings-form" class="settings-form">
+          <label>
+            Hitung mundur (detik)
+            <input name="countdown_seconds" type="number" min="1" max="10" step="1" required />
+          </label>
+          <label class="check">
+            <input name="mirror_output" type="checkbox" />
+            Cerminkan hasil foto kamera depan
+          </label>
+          <button type="submit" class="primary">Simpan pengaturan</button>
+        </form>
+        <p id="settings-status" class="status-msg" role="status"></p>
+      </section>
+    </main>
+  </body>
+</html>
