@@ -61,6 +61,11 @@ export function showToast(message, { action, ms = 4000 } = {}) {
   toastTimer = setTimeout(() => (toastEl.hidden = true), ms);
 }
 
+export function hideToast() {
+  clearTimeout(toastTimer);
+  if (toastEl) toastEl.hidden = true;
+}
+
 // Tekan lama: onProgress(0..1, event?) tiap frame, onDone sekali saat penuh; batal bila dilepas atau keluar.
 export function bindLongPress(el, { ms = 3000, onProgress = () => {}, onDone = () => {} } = {}) {
   let raf = 0;
@@ -200,7 +205,7 @@ function createPinDialog(onVerified) {
   };
 }
 
-function createStaffMenu({ isOn, setOn }) {
+function createStaffMenu({ isOn, setOn, onSoundChange }) {
   const dialog = $('#staff-menu');
   const kioskBtn = $('#staff-kiosk');
   const soundBtn = $('#staff-sound');
@@ -228,6 +233,7 @@ function createStaffMenu({ isOn, setOn }) {
     unlock();
     setEnabled(!isEnabled());
     render();
+    onSoundChange();
   });
   langSel.addEventListener('change', () => setDeviceLang(langSel.value || null));
   bindThemeToggle($('#staff-theme'), { label: (p) => t(`common.theme.${p}`) });
@@ -242,19 +248,10 @@ function createStaffMenu({ isOn, setOn }) {
   };
 }
 
-// onChange(on) dipanggil tiap status kiosk berubah; penguncian layar ada di pemanggil.
-export function initKiosk(ctx, { onChange = () => {} } = {}) {
-  let on = isKioskOn();
+// Status kiosk satu-satunya ada di ctx (ctx.kiosk / ctx.setKioskOn); penguncian layar ada di main.js.
+export function initKiosk(ctx, { onSoundChange = () => {} } = {}) {
   const corner = $('#kiosk-corner');
-  corner.hidden = !on;
-
-  const setOn = (next) => {
-    on = next;
-    setKioskOn(on);
-    corner.hidden = !on;
-    onChange(on);
-  };
-  const staffMenu = createStaffMenu({ isOn: () => on, setOn });
+  const staffMenu = createStaffMenu({ isOn: ctx.kiosk, setOn: ctx.setKioskOn, onSoundChange });
   const pinDialog = createPinDialog(() => staffMenu.open());
 
   // kiosk_available dibaca saat tekan lama selesai: pengaturan server masuk belakangan.
@@ -265,6 +262,4 @@ export function initKiosk(ctx, { onChange = () => {} } = {}) {
   const ring = createRing();
   bindDoor($('#booth-logo'), ring, openDoor);
   bindDoor(corner, ring, openDoor);
-
-  return { isOn: () => on };
 }

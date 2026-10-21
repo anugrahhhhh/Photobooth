@@ -6,7 +6,8 @@ import { initTheme, bindThemeToggle, refreshThemeToggles } from '../theme.js';
 import { applyI18n, bindLangSelect, initialLang, onLangChange, setLang, t } from '../i18n.js';
 import { createState, resetAll } from '../state.js';
 import { initSound, isEnabled, setEnabled, unlock } from '../sound.js';
-import { initKiosk, isKioskOn } from '../kiosk.js';
+import { hideToast, initKiosk, isKioskOn, setKioskOn as persistKiosk, showToast } from '../kiosk.js';
+import { attachIdle, createIdleTimer } from '../idle.js';
 import { createWakeLock } from '../wake-lock.js';
 import { createResultStore } from './result-store.js';
 import * as welcome from './screens/welcome.js';
@@ -27,6 +28,7 @@ const DEFAULT_SETTINGS = {
   kiosk_available: false,
 };
 
+const IDLE_WARN_MS = 10_000;
 const newSession = () => ({ templateImg: null, target: null, selected: 0, pickMode: 'start' });
 
 function createCtx(settings) {
@@ -45,6 +47,11 @@ function createCtx(settings) {
     result: createResultStore(),
     wakeLock: createWakeLock(),
     kiosk: () => kioskOn,
+    // timeout dibaca tiap tick: pengaturan server datang setelah booth dipasang
+    idle: createIdleTimer({
+      timeoutMs: () => Math.max(30, Number(settings.kiosk_idle_seconds) || 90) * 1000,
+      warnMs: IDLE_WARN_MS,
+    }),
     screen: () => current,
     visit: () => visits,
     onReset: (cb) => resetHooks.push(cb),
@@ -59,7 +66,9 @@ function createCtx(settings) {
     go(name, params = {}) {
       if (!SCREENS[name]) throw new Error(`Layar tidak dikenal: ${name}`);
       if (current) SCREENS[current].leave(ctx);
+      if (current === 'welcome') ctx.idle.resume();
       current = name;
+      if (name === 'welcome') ctx.idle.pause();
       visits++;
       for (const section of $$('[data-screen]')) section.hidden = section.dataset.screen !== name;
       renderSteps(name);
@@ -67,8 +76,48 @@ function createCtx(settings) {
       SCREENS[name].enter(ctx, params);
     },
   };
-  ctx.setKioskOn = (on) => (kioskOn = on);
+  ctx.setKioskOn = (on) => {
+    kioskOn = on;
+    persistKiosk(on);
+    applyKioskLock(ctx, on);
+  };
   return ctx;
+}
+
+let detachIdle = null;
+
+// Tamu berhenti di tengah sesi: buang semua state dan kembali ke sambutan (kamera tetap menyala).
+function expireSession(ctx) {
+  hideToast();
+  for (const d of $$('dialog[open]')) d.close();
+  if (!$('#save-overlay').hidden) $('#save-overlay-close').click();
+  ctx.resetSession();
+  ctx.go('welcome');
+}
+
+function applyKioskLock(ctx, on) {
+  document.body.classList.toggle('kiosk', on);
+  $('#kiosk-corner').hidden = !on;
+  detachIdle?.();
+  detachIdle = null;
+  if (on) {
+    ctx.idle.activity();
+    detachIdle = attachIdle(ctx.idle, {
+      onWarn: () =>
+        showToast(t('kiosk.idle.warn', { s: IDLE_WARN_MS / 1000 }), {
+          ms: IDLE_WARN_MS,
+          action: { label: t('kiosk.idle.continue'), onClick: () => ctx.idle.activity() },
+        }),
+      onExpire: () => expireSession(ctx),
+      onActive: hideToast,
+    });
+    ctx.wakeLock.acquire();
+  } else {
+    hideToast();
+    // layar berpose memegang wake lock sendiri
+    if (ctx.screen() !== 'shoot') ctx.wakeLock.release();
+  }
+  welcome.kioskChanged(ctx);
 }
 
 function renderSteps(name) {
@@ -116,7 +165,6 @@ function bindSoundToggle() {
     btn.setAttribute('aria-pressed', String(on));
     btn.textContent = on ? '\u{1F50A}' : '\u{1F507}';
   };
-  btn.hidden = read(KEYS.kiosk) === '1';
   btn.addEventListener('click', () => {
     unlock();
     setEnabled(!isEnabled());
@@ -138,6 +186,7 @@ async function start() {
   );
   $('#booth-logo').textContent = PRODUCT_NAME;
   $('#welcome-title').textContent = PRODUCT_NAME;
+  $('#welcome-kiosk-title').textContent = PRODUCT_NAME;
   initMenu();
   applyI18n(document);
 
@@ -145,9 +194,26 @@ async function start() {
   const ctx = createCtx({ ...DEFAULT_SETTINGS });
   initSound(ctx.settings);
   const syncSound = bindSoundToggle();
-  // Penguncian layar saat kiosk menyala menyusul di Tahap 5.3 lewat onChange ini.
-  initKiosk(ctx, { onChange: (on) => ctx.setKioskOn(on) });
+  initKiosk(ctx, { onSoundChange: syncSound });
   for (const screen of Object.values(SCREENS)) screen.init(ctx);
+  document.addEventListener('contextmenu', (e) => {
+    if (ctx.kiosk()) e.preventDefault();
+  });
+  // Sistem melepas wake lock saat tab tersembunyi tetapi held() masih true: lepas dulu.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || !ctx.kiosk()) return;
+    ctx.wakeLock.release();
+    ctx.wakeLock.acquire();
+  });
+  // Fullscreen butuh gestur yang sah; untuk sentuhan itu pointerup, bukan pointerdown.
+  document.addEventListener(
+    'pointerup',
+    () => {
+      if (ctx.kiosk() && !document.fullscreenElement) document.documentElement.requestFullscreen?.()?.catch(() => {});
+    },
+    { capture: true, once: true },
+  );
+  applyKioskLock(ctx, ctx.kiosk());
   ctx.go('welcome');
   Object.assign(ctx.settings, await getJSON('/api/settings').catch(() => ({})));
   syncSound();

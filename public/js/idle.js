@@ -1,7 +1,9 @@
 // Timer menganggur kiosk. createIdleTimer murni (jam bisa diganti untuk tes);
 // attachIdle memasangkannya ke DOM.
 
-export function createIdleTimer({ timeoutMs, warnMs, now = () => Date.now() }) {
+// timeoutMs boleh fungsi, supaya pengaturan server yang datang belakangan terbaca saat tick
+export function createIdleTimer({ timeoutMs: timeoutOpt, warnMs, now = () => Date.now() }) {
+  const timeout = () => (typeof timeoutOpt === 'function' ? timeoutOpt() : timeoutOpt);
   let lastActivity = now();
   let pauseDepth = 0;
   // status 'expired' bertahan sampai activity() atau resume() terakhir
@@ -27,6 +29,7 @@ export function createIdleTimer({ timeoutMs, warnMs, now = () => Date.now() }) {
   function tick() {
     if (pauseDepth > 0) return 'idle';
     const elapsed = now() - lastActivity;
+    const timeoutMs = timeout();
     if (expired || elapsed >= timeoutMs) {
       expired = true;
       return 'expired';

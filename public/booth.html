@@ -21,7 +21,7 @@
         <li data-step="result" data-i18n="booth.steps.result">Unduh</li>
       </ol>
       <div class="booth-header-tools">
-        <button type="button" class="btn btn-icon" id="sound-toggle" aria-label="Suara" aria-pressed="true" data-kiosk-hide data-i18n-attr="aria-label:booth.sound.toggle" hidden>&#128266;</button>
+        <button type="button" class="btn btn-icon" id="sound-toggle" aria-label="Suara" aria-pressed="true" data-kiosk-hide data-i18n-attr="aria-label:booth.sound.toggle">&#128266;</button>
         <div class="booth-menu" id="booth-menu">
           <button type="button" class="btn btn-icon" id="menu-toggle" aria-expanded="false" aria-controls="menu-panel" aria-label="Menu" data-i18n-attr="aria-label:booth.menu.label">&#9776;</button>
           <div class="booth-menu-panel card" id="menu-panel" hidden>
@@ -77,13 +77,19 @@
 
     <main class="booth-main">
       <section data-screen="welcome">
-        <div class="inapp-banner card" id="inapp-banner" hidden>
+        <div class="inapp-banner card" id="inapp-banner" data-kiosk-hide hidden>
           <p><strong data-i18n="booth.inapp.title">Buka di Chrome atau Safari</strong> <span data-i18n="booth.inapp.body">agar kamera dan unduhan berjalan lancar.</span></p>
           <div class="row">
             <input class="input" id="inapp-link" readonly aria-label="Link halaman ini" data-i18n-attr="aria-label:booth.inapp.link" />
             <button type="button" class="btn" id="inapp-copy" data-i18n="booth.inapp.copy">Salin link</button>
             <button type="button" class="btn" id="inapp-close" data-i18n="common.close">Tutup</button>
           </div>
+        </div>
+        <div class="welcome-kiosk" id="welcome-kiosk">
+          <h1 class="display" id="welcome-kiosk-title">Photobooth</h1>
+          <div class="welcome-slides" id="welcome-slides" aria-hidden="true" hidden></div>
+          <p class="welcome-tap display" data-i18n="booth.welcome.tapToStart">Ketuk untuk mulai</p>
+          <p class="welcome-caption" id="welcome-caption"></p>
         </div>
         <div class="welcome card card-lg">
           <h1 class="display" id="welcome-title">Photobooth</h1>
@@ -139,7 +145,7 @@
             <div class="shoot-tools">
               <button type="button" class="btn" id="flip" data-i18n="booth.shoot.flip" hidden>Balik kamera</button>
               <select class="input" id="camera-select" hidden aria-label="Pilih kamera" data-i18n-attr="aria-label:booth.shoot.selectCamera"></select>
-              <button type="button" class="btn" id="fullscreen" data-i18n="booth.shoot.fullscreen" hidden>Layar penuh</button>
+              <button type="button" class="btn" id="fullscreen" data-kiosk-hide data-i18n="booth.shoot.fullscreen" hidden>Layar penuh</button>
               <label class="btn btn-secondary gallery-button">
                 <span data-i18n="booth.shoot.gallery">Unggah dari galeri</span>
                 <input type="file" accept="image/*" multiple class="gallery-input" />

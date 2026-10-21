@@ -75,3 +75,12 @@ Checklist uji lintas perangkat ada di [docs/manual-test.md](docs/manual-test.md)
 - Ponsel dalam posisi potret biasanya memberi frame potret, jadi masalah ini tidak terjadi di sana.
 - **Saran untuk admin:** pakai slot lanskap jika booth memakai webcam laptop.
 - Pratinjau kamera depan selalu dicermin. Hasil foto dicermin hanya jika "Cerminkan hasil foto kamera depan" aktif di dashboard. Kamera belakang dan foto dari galeri tidak pernah dicermin.
+
+## Mode kiosk
+
+Mode kiosk mengunci booth untuk dipakai tamu tanpa petugas: layar sambutan penuh, tombol keluar disembunyikan, layar tetap menyala, dan sesi kembali ke awal sendiri bila ditinggalkan.
+
+- **Atur PIN:** di admin, buka Pengaturan lalu isi PIN petugas (4-8 digit). Tanpa PIN, kiosk tidak bisa diaktifkan. Lama menganggur sebelum reset diatur lewat `kiosk_idle_seconds` (30-600 detik).
+- **Masuk dan keluar:** tekan lama logo selama 3 detik (di layar sambutan kiosk, tekan lama sudut kanan atas layar), masukkan PIN, lalu pilih "Aktifkan kiosk" atau "Nonaktifkan kiosk" di menu petugas. Status disimpan per perangkat.
+- **iPhone dan iPad:** Safari tidak punya layar penuh untuk halaman web, jadi aktifkan **Akses Terpandu**: Pengaturan > Aksesibilitas > Akses Terpandu, nyalakan, lalu buka booth dan tekan tombol samping tiga kali untuk memulai.
+- **Darurat, server tidak bisa dihubungi:** PIN diperiksa di server, jadi tanpa koneksi kiosk tidak bisa dimatikan lewat menu. Tutup tab browser lalu buka lagi alamat booth, atau hapus data situs untuk alamat booth di pengaturan browser (ini menghapus status kiosk di perangkat itu).

@@ -120,3 +120,15 @@ test('activity() saat dijeda tetap mereset jam, dan tidak mengubah jeda', () => 
   clock.t = 190_000;
   assert.equal(timer.tick(), 'expired');
 });
+
+test('timeoutMs boleh fungsi dan dibaca ulang tiap tick', () => {
+  const clock = { t: 0 };
+  let timeout = 90_000;
+  const timer = createIdleTimer({ timeoutMs: () => timeout, warnMs: 10_000, now: () => clock.t });
+  clock.t = 40_000;
+  assert.equal(timer.tick(), 'idle');
+  timeout = 45_000; // pengaturan server datang belakangan
+  assert.equal(timer.tick(), 'warn');
+  clock.t = 45_000;
+  assert.equal(timer.tick(), 'expired');
+});

@@ -112,7 +112,8 @@ export function init(ctx) {
   });
   $('#new-session').addEventListener('click', () => {
     ctx.resetSession();
-    ctx.go('pick', { mode: 'start' });
+    if (ctx.kiosk()) ctx.go('welcome');
+    else ctx.go('pick', { mode: 'start' });
   });
 }
 

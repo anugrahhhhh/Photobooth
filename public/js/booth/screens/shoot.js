@@ -328,7 +328,7 @@ export function init(ctx) {
   }
   camera.onStreamLost(() => recoverCamera());
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState !== 'visible' || !onShoot()) return;
+    if (document.visibilityState !== 'visible' || !onShoot() || ctx.kiosk()) return; // kiosk: main.js yang mengurus
     // Sistem melepas wake lock saat tab tersembunyi, tetapi held() masih true: lepas dulu.
     ctx.wakeLock.release();
     ctx.wakeLock.acquire();
@@ -357,5 +357,5 @@ export function enter(ctx, { target = null, auto = false } = {}) {
 export function leave(ctx) {
   cancelRun();
   autoPending = false;
-  ctx.wakeLock.release();
+  if (!ctx.kiosk()) ctx.wakeLock.release();
 }
