@@ -115,8 +115,14 @@ td.num { font-variant-numeric: tabular-nums; }
   .c-actions { order: 4; flex: 1 0 100%; margin-top: 6px; }
 }
 
-/* Pengaturan (di dashboard untuk sementara) */
-.settings-form { display: grid; gap: 14px; max-width: 420px; margin-bottom: 8px; }
+/* Pengaturan */
+.settings-form { display: grid; gap: 14px; max-width: 420px; }
+.settings-form-wrap { display: grid; gap: 16px; margin-bottom: 16px; }
+.settings-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+.settings-actions .status-msg { margin: 0; }
+.pin-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pin-row .input { flex: 1 1 140px; width: auto; }
+.field .hint { color: var(--muted); font-size: 13px; }
 label.check { display: flex; align-items: center; gap: 12px; }
 
 /* Editor template */
