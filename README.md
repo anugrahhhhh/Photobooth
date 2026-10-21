@@ -1,6 +1,6 @@
 # Photobooth
 
-Photobooth digital berbasis browser. Desain: [docs/superpowers/specs/2026-10-12-photobooth-design.md](docs/superpowers/specs/2026-10-12-photobooth-design.md).
+Photobooth digital berbasis browser. Desain: [docs/superpowers/specs/2026-10-12-photobooth-design.md](docs/superpowers/specs/2026-10-12-photobooth-design.md); desain ulang landing, booth, admin, dan kiosk: [docs/superpowers/specs/2026-10-12-redesign-kiosk-design.md](docs/superpowers/specs/2026-10-12-redesign-kiosk-design.md).
 
 Butuh Node.js 22.9 atau lebih baru.
 
@@ -83,4 +83,5 @@ Mode kiosk mengunci booth untuk dipakai tamu tanpa petugas: layar sambutan penuh
 - **Atur PIN:** di admin, buka Pengaturan lalu isi PIN petugas (4-8 digit). Tanpa PIN, kiosk tidak bisa diaktifkan. Lama menganggur sebelum reset diatur lewat `kiosk_idle_seconds` (30-600 detik).
 - **Masuk dan keluar:** tekan lama logo selama 3 detik (di layar sambutan kiosk, tekan lama sudut kanan atas layar), masukkan PIN, lalu pilih "Aktifkan kiosk" atau "Nonaktifkan kiosk" di menu petugas. Status disimpan per perangkat.
 - **iPhone dan iPad:** Safari tidak punya layar penuh untuk halaman web, jadi aktifkan **Akses Terpandu**: Pengaturan > Aksesibilitas > Akses Terpandu, nyalakan, lalu buka booth dan tekan tombol samping tiga kali untuk memulai.
+- **PIN salah:** setelah 5 kali salah dari satu alamat IP, verifikasi dikunci 15 menit (booth menampilkan pesan batas percobaan). Hanya percobaan gagal yang dihitung.
 - **Darurat, server tidak bisa dihubungi:** PIN diperiksa di server, jadi tanpa koneksi kiosk tidak bisa dimatikan lewat menu. Tutup tab browser lalu buka lagi alamat booth, atau hapus data situs untuk alamat booth di pengaturan browser (ini menghapus status kiosk di perangkat itu).
