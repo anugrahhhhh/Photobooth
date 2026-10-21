@@ -29,6 +29,14 @@ export function pinErrorKey(err) {
   return { key: 'kiosk.pin.error' };
 }
 
+// Keputusan tekan lama di pintu petugas. Kiosk menyala tanpa PIN (PIN dihapus admin): langsung menu,
+// karena tidak ada lagi yang dilindungi dan itu satu-satunya jalan mematikan kiosk lewat UI.
+// kioskAvailable undefined (pengaturan server belum/ gagal dimuat) tetap lewat dialog PIN.
+export function staffDoorAction({ kioskOn, kioskAvailable }) {
+  if (kioskAvailable !== false) return 'pin';
+  return kioskOn ? 'menu' : 'needPin';
+}
+
 /* ---------- Bagian DOM ---------- */
 
 const $ = (sel) => document.querySelector(sel);
@@ -205,7 +213,7 @@ function createPinDialog(onVerified) {
   };
 }
 
-function createStaffMenu({ isOn, setOn, onSoundChange }) {
+function createStaffMenu({ isOn, setOn, onSoundChange, onLangDefaultChange }) {
   const dialog = $('#staff-menu');
   const kioskBtn = $('#staff-kiosk');
   const soundBtn = $('#staff-sound');
@@ -235,7 +243,10 @@ function createStaffMenu({ isOn, setOn, onSoundChange }) {
     render();
     onSoundChange();
   });
-  langSel.addEventListener('change', () => setDeviceLang(langSel.value || null));
+  langSel.addEventListener('change', () => {
+    setDeviceLang(langSel.value || null);
+    onLangDefaultChange();
+  });
   bindThemeToggle($('#staff-theme'), { label: (p) => t(`common.theme.${p}`) });
   $('#staff-reload').addEventListener('click', () => location.reload());
   $('#staff-close').addEventListener('click', () => dialog.close());
@@ -249,14 +260,16 @@ function createStaffMenu({ isOn, setOn, onSoundChange }) {
 }
 
 // Status kiosk satu-satunya ada di ctx (ctx.kiosk / ctx.setKioskOn); penguncian layar ada di main.js.
-export function initKiosk(ctx, { onSoundChange = () => {} } = {}) {
+export function initKiosk(ctx, { onSoundChange = () => {}, onLangDefaultChange = () => {} } = {}) {
   const corner = $('#kiosk-corner');
-  const staffMenu = createStaffMenu({ isOn: ctx.kiosk, setOn: ctx.setKioskOn, onSoundChange });
+  const staffMenu = createStaffMenu({ isOn: ctx.kiosk, setOn: ctx.setKioskOn, onSoundChange, onLangDefaultChange });
   const pinDialog = createPinDialog(() => staffMenu.open());
 
   // kiosk_available dibaca saat tekan lama selesai: pengaturan server masuk belakangan.
   const openDoor = () => {
-    if (ctx.settings.kiosk_available === false) showToast(t('kiosk.needPin'));
+    const action = staffDoorAction({ kioskOn: ctx.kiosk(), kioskAvailable: ctx.settings.kiosk_available });
+    if (action === 'menu') staffMenu.open();
+    else if (action === 'needPin') showToast(t('kiosk.needPin'));
     else pinDialog.open();
   };
   const ring = createRing();

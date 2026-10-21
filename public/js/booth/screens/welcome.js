@@ -43,6 +43,7 @@ export function init(ctx) {
   $('#inapp-copy').addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(location.href);
+      $('#inapp-copy').dataset.i18n = 'booth.inapp.copied';
       $('#inapp-copy').textContent = t('booth.inapp.copied');
     } catch {
       link.focus();
@@ -107,4 +108,11 @@ export function kioskChanged(ctx) {
   if (ctx.screen() !== 'welcome') return;
   stopSlides();
   enter(ctx);
+}
+
+// Menu petugas mengubah suara atau bahasa bawaan saat sambutan tampil: segarkan keterangan dan bahasa.
+export function staffChanged(ctx) {
+  if (!ctx.kiosk() || ctx.screen() !== 'welcome') return;
+  setLang(deviceLang() ?? initialLang({ navigatorLang: navigator.language }), { persist: false });
+  renderCaption();
 }

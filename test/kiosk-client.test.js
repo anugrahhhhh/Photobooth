@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ApiError } from '../public/js/api.js';
-import { isKioskOn, setKioskOn, deviceLang, setDeviceLang, pinErrorKey } from '../public/js/kiosk.js';
+import { isKioskOn, setKioskOn, deviceLang, setDeviceLang, pinErrorKey, staffDoorAction } from '../public/js/kiosk.js';
 import id from '../public/js/i18n/id.js';
 import en from '../public/js/i18n/en.js';
 
@@ -52,4 +52,15 @@ test('deviceLang hanya id, en, atau null', () => {
   assert.equal(deviceLang(s), null);
   s.setItem('pb.kioskLang', 'fr');
   assert.equal(deviceLang(s), null);
+});
+
+test('staffDoorAction: PIN, menu langsung, atau minta atur PIN', () => {
+  // pengaturan belum dimuat atau gagal dimuat: tetap dialog PIN (server yang memutuskan)
+  assert.equal(staffDoorAction({ kioskOn: false, kioskAvailable: undefined }), 'pin');
+  assert.equal(staffDoorAction({ kioskOn: true, kioskAvailable: undefined }), 'pin');
+  assert.equal(staffDoorAction({ kioskOn: false, kioskAvailable: true }), 'pin');
+  assert.equal(staffDoorAction({ kioskOn: true, kioskAvailable: true }), 'pin');
+  // PIN belum ada: kiosk mati diminta atur PIN; kiosk menyala (PIN dihapus) langsung ke menu
+  assert.equal(staffDoorAction({ kioskOn: false, kioskAvailable: false }), 'needPin');
+  assert.equal(staffDoorAction({ kioskOn: true, kioskAvailable: false }), 'menu');
 });
