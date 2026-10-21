@@ -28,8 +28,16 @@ export async function init() {
     pinDelete.disabled = !has;
   };
 
+  // Formulir terkunci sampai muat awal berhasil: gagal muat tidak boleh membuka jalan menyimpan nilai kosong.
+  const setLocked = (locked) => {
+    for (const c of [...form.elements, ...pinForm.elements]) c.disabled = locked;
+  };
+  setLocked(true);
   try {
+    await adminApi.get('/api/auth/me'); // belum login: dialihkan ke halaman login
     await load();
+    setLocked(false);
+    pinDelete.disabled = !pinState.textContent.startsWith('PIN sudah');
   } catch (err) {
     setStatus(status, err.message, 'error');
   }
