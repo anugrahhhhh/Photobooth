@@ -79,6 +79,7 @@ export function createApp({ config, db, storage, now = () => new Date(), extraRo
     }),
   );
   app.get(['/admin', '/admin/'], (req, res) => res.redirect('/admin/dashboard.html'));
+  app.get('/booth', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'booth.html')));
   app.use(express.static(PUBLIC_DIR));
 
   app.get('/healthz', (req, res) => {

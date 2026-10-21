@@ -101,3 +101,11 @@ test('GET /admin dan /admin/ → redirect ke dashboard', async () => {
     assert.equal(res.headers.location, '/admin/dashboard.html');
   }
 });
+
+test('GET /booth → 200 html dengan semua layar dan main.js', async () => {
+  const res = await request(app).get('/booth');
+  assert.equal(res.status, 200);
+  assert.match(res.headers['content-type'], /text\/html/);
+  assert.match(res.text, /data-screen="shoot"/);
+  assert.match(res.text, /\/js\/booth\/main\.js/);
+});

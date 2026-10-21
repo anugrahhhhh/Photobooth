@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="id" data-skin="fun">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#FF5A4E" />
+    <title>Photobooth</title>
+    <script src="/js/theme-boot.js"></script>
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/booth.css" />
+    <script type="module" src="/js/booth/main.js"></script>
+  </head>
+  <body class="booth-app">
+    <header class="booth-header">
+      <span class="booth-logo" id="booth-logo">Photobooth</span>
+      <ol class="steps" id="steps" aria-label="Langkah" data-i18n-attr="aria-label:booth.steps.label" hidden>
+        <li data-step="pick" data-i18n="booth.steps.pick">Template</li>
+        <li data-step="shoot" data-i18n="booth.steps.shoot">Foto</li>
+        <li data-step="adjust" data-i18n="booth.steps.adjust">Atur</li>
+        <li data-step="result" data-i18n="booth.steps.result">Unduh</li>
+      </ol>
+      <div class="booth-header-tools">
+        <button type="button" class="btn btn-icon" id="sound-toggle" aria-label="Suara" data-i18n-attr="aria-label:booth.sound.toggle" hidden>&#128266;</button>
+        <div class="booth-menu" id="booth-menu">
+          <button type="button" class="btn btn-icon" id="menu-toggle" aria-expanded="false" aria-controls="menu-panel" aria-label="Menu" data-i18n-attr="aria-label:booth.menu.label">&#9776;</button>
+          <div class="booth-menu-panel card" id="menu-panel" hidden>
+            <div class="menu-row">
+              <span data-i18n="common.theme">Tema</span>
+              <button type="button" class="btn btn-icon" id="theme-toggle"></button>
+            </div>
+            <div class="menu-row">
+              <label for="lang-select" data-i18n="common.language">Bahasa</label>
+              <select id="lang-select" class="input">
+                <option value="id">Indonesia</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <a class="btn btn-secondary" href="/" data-kiosk-hide data-i18n="booth.menu.landing">Beranda</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="booth-main">
+      <section data-screen="welcome">
+        <div class="inapp-banner card" id="inapp-banner" hidden>
+          <p><strong data-i18n="booth.inapp.title">Buka di Chrome atau Safari</strong> <span data-i18n="booth.inapp.body">agar kamera dan unduhan berjalan lancar.</span></p>
+          <div class="row">
+            <input class="input" id="inapp-link" readonly aria-label="Link halaman ini" data-i18n-attr="aria-label:booth.inapp.link" />
+            <button type="button" class="btn" id="inapp-copy" data-i18n="booth.inapp.copy">Salin link</button>
+            <button type="button" class="btn" id="inapp-close" data-i18n="common.close">Tutup</button>
+          </div>
+        </div>
+        <div class="welcome card card-lg">
+          <h1 class="display" id="welcome-title">Photobooth</h1>
+          <p data-i18n="booth.welcome.tagline">Pilih bingkai, berpose, lalu unduh photostrip-mu.</p>
+          <button type="button" class="btn btn-primary btn-lg" id="start" data-i18n="common.start">Mulai</button>
+        </div>
+      </section>
+
+      <section data-screen="pick" hidden>
+        <div class="screen-head">
+          <h2 class="display" id="pick-title" data-i18n="booth.pick.title">Pilih template</h2>
+          <button type="button" class="btn" id="pick-back" data-i18n="booth.pick.back" hidden>Kembali</button>
+        </div>
+        <div class="chips" id="pick-chips" role="group" aria-label="Filter jumlah foto" data-i18n-attr="aria-label:booth.pick.filter"></div>
+        <p class="status-msg" id="pick-status" role="status"></p>
+        <button type="button" class="btn" id="pick-retry" data-i18n="common.retry" hidden>Coba lagi</button>
+        <div class="template-grid" id="template-grid"></div>
+      </section>
+
+      <section data-screen="shoot" hidden></section>
+      <section data-screen="review" hidden></section>
+      <section data-screen="adjust" hidden></section>
+      <section data-screen="result" hidden></section>
+    </main>
+  </body>
+</html>
