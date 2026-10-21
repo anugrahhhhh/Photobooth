@@ -6,7 +6,7 @@ main { overflow-x: clip; }
   margin: 12px; padding: 8px 12px;
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
 }
-.nav-brand { display: flex; align-items: center; gap: 10px; font: 800 18px/1 var(--font-display); color: var(--text); text-decoration: none; }
+.nav-brand { display: flex; align-items: center; gap: 10px; min-height: var(--tap); font: 800 18px/1 var(--font-display); color: var(--text); text-decoration: none; }
 .logo { width: 28px; height: 28px; border-radius: 8px; background: var(--primary); border: var(--outline); }
 .nav-links { display: flex; gap: 4px; margin-left: auto; }
 .nav-link { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 10px; font-weight: 700; color: var(--text); text-decoration: none; }
@@ -76,3 +76,6 @@ main { overflow-x: clip; }
   .nav { position: static; }
   .nav-tools { margin-left: auto; }
 }
+
+/* Judul bagian di atas pita --accent: outline lebih tebal agar tetap terbaca */
+[data-skin="fun"] .band .display { -webkit-text-stroke-width: 3.5px; }
