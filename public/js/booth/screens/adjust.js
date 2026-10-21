@@ -110,6 +110,8 @@ function renderFilterButtons() {
   );
 }
 
+let resetGestures = () => {};
+
 function initGestures(ctx) {
   const canvas = $('#adjust-canvas');
   const pointers = new Map();
@@ -160,6 +162,11 @@ function initGestures(ctx) {
     }
   });
 
+  resetGestures = () => {
+    pointers.clear();
+    gesture = null;
+  };
+
   const end = (e) => {
     pointers.delete(e.pointerId);
     if (pointers.size === 1 && transform()) {
@@ -172,6 +179,7 @@ function initGestures(ctx) {
   };
   canvas.addEventListener('pointerup', end);
   canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('lostpointercapture', end);
 
   canvas.addEventListener(
     'wheel',
@@ -218,4 +226,5 @@ export function enter(ctx) {
 
 export function leave() {
   cancelAnimationFrame(frame);
+  resetGestures(); // satu pointer macet tidak boleh merusak geser tamu berikutnya
 }

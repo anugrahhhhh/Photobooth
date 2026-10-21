@@ -75,6 +75,14 @@
       </div>
     </dialog>
 
+    <dialog class="dialog drop-dialog" id="drop-dialog" aria-labelledby="drop-text">
+      <p id="drop-text"></p>
+      <div class="row">
+        <button type="button" class="btn btn-primary" id="drop-continue" data-i18n="booth.pick.confirmContinue">Lanjutkan</button>
+        <button type="button" class="btn" id="drop-cancel" data-i18n="booth.pick.confirmCancel">Batal</button>
+      </div>
+    </dialog>
+
     <main class="booth-main">
       <section data-screen="welcome">
         <div class="inapp-banner card" id="inapp-banner" data-kiosk-hide hidden>
@@ -108,7 +116,7 @@
 
       <section data-screen="pick" hidden>
         <div class="screen-head">
-          <h2 class="display" id="pick-title" data-i18n="booth.pick.title">Pilih template</h2>
+          <h2 class="display" id="pick-title" tabindex="-1" data-i18n="booth.pick.title">Pilih template</h2>
           <button type="button" class="btn" id="pick-back" data-i18n="booth.pick.back" hidden>Kembali</button>
         </div>
         <div class="chips" id="pick-chips" role="group" aria-label="Filter jumlah foto" data-i18n-attr="aria-label:booth.pick.filter"></div>
@@ -118,6 +126,7 @@
       </section>
 
       <section data-screen="shoot" hidden>
+        <h2 class="visually-hidden" data-i18n="booth.steps.shoot">Foto</h2>
         <div class="shoot">
           <div class="viewfinder" id="viewfinder">
             <div class="overlay-hole"><video id="video" playsinline muted autoplay></video></div>
@@ -173,6 +182,7 @@
         </div>
       </section>
       <section data-screen="adjust" hidden>
+        <h2 class="visually-hidden" data-i18n="booth.steps.adjust">Atur</h2>
         <div class="adjust">
           <div class="adjust-stage" id="adjust-stage">
             <canvas id="adjust-canvas" aria-label="Pratinjau photostrip. Ketuk slot untuk memilih, geser untuk mengatur posisi." data-i18n-attr="aria-label:booth.adjust.canvas"></canvas>
@@ -194,6 +204,7 @@
         </div>
       </section>
       <section data-screen="result" hidden>
+        <h2 class="visually-hidden" data-i18n="booth.steps.result">Unduh</h2>
         <div class="result">
           <img id="result-img" alt="Hasil photostrip" data-i18n-attr="alt:booth.result.alt" />
           <div class="result-actions card">

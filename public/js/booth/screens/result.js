@@ -5,6 +5,26 @@ import { filteredCanvas } from '../../filters.js';
 import { releaseCanvas, resetPhotos, logSessionOnce } from '../../state.js';
 import { render } from '../../strip.js';
 import { clearFilteredCache } from './adjust.js';
+import { resultButtonState } from '../result-view.js';
+
+let phase = 'preparing';
+
+function setPhase(next) {
+  phase = next;
+  const btn = $('#download');
+  const { key, disabled } = resultButtonState(next);
+  btn.dataset.i18n = key; // ikut berganti saat bahasa diubah
+  btn.textContent = t(key);
+  btn.disabled = disabled;
+}
+
+function setError(key) {
+  const status = $('#result-status');
+  if (key) status.dataset.i18n = key;
+  else delete status.dataset.i18n;
+  status.textContent = key ? t(key) : '';
+  status.className = key ? 'status-msg error' : 'status-msg';
+}
 
 function timestamp(d = new Date()) {
   const p = (n) => String(n).padStart(2, '0');
@@ -15,49 +35,48 @@ async function prepareResult(ctx) {
   const job = ctx.result.begin();
   const { state, session } = ctx;
   const canvas = el('canvas');
-  // Salinan tersaring resolusi penuh dibuat dan dilepas satu per slot (null untuk Normal).
-  render(canvas, {
-    template: state.template,
-    img: session.templateImg,
-    photos: state.photos,
-    transforms: state.transforms,
-    scale: 1,
-    mapPhoto: (p) => filteredCanvas(p, state.filter),
-  });
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
-  releaseCanvas(canvas);
-  if (!blob) throw new Error(t('booth.result.prepareError'));
+  let blob;
+  try {
+    // Salinan tersaring resolusi penuh dibuat dan dilepas satu per slot (null untuk Normal).
+    render(canvas, {
+      template: state.template,
+      img: session.templateImg,
+      photos: state.photos,
+      transforms: state.transforms,
+      scale: 1,
+      mapPhoto: (p) => filteredCanvas(p, state.filter),
+    });
+    blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+  } finally {
+    releaseCanvas(canvas);
+  }
+  if (!blob) throw new Error('toBlob');
   const file = new File([blob], `photobooth-${timestamp()}.jpg`, { type: 'image/jpeg' });
   return ctx.result.commit(job, file); // false bila sudah ada permintaan lebih baru atau reset
 }
 
 async function enterResult(ctx) {
   const visit = ctx.visit();
-  const btn = $('#download');
-  const status = $('#result-status');
-  status.textContent = '';
-  status.className = 'status-msg';
+  setError(null);
   if (!ctx.result.current()) {
-    btn.disabled = true;
-    btn.textContent = t('booth.result.preparing');
+    setPhase('preparing');
     $('#result-img').removeAttribute('src');
     await nextFrame();
     await new Promise((r) => setTimeout(r, 0)); // biarkan tombol tergambar dulu
     if (ctx.visit() !== visit) return;
     try {
       await prepareResult(ctx);
-    } catch (err) {
+    } catch {
       if (ctx.visit() !== visit) return;
-      status.textContent = err.message;
-      status.className = 'status-msg error';
+      setError('booth.result.prepareError');
+      setPhase('failed'); // tombol menjadi "Coba lagi"
       return;
     }
   }
   const current = ctx.result.current();
   if (ctx.visit() !== visit || !current) return;
   $('#result-img').src = current.url;
-  btn.disabled = false;
-  btn.textContent = t('booth.result.download');
+  setPhase('ready');
 }
 
 export async function download(ctx) {
@@ -100,9 +119,11 @@ export async function download(ctx) {
 }
 
 export function init(ctx) {
-  $('#download').addEventListener('click', () => download(ctx));
+  $('#download').addEventListener('click', () => (phase === 'failed' ? enterResult(ctx) : download(ctx)));
   $('#back-to-adjust').addEventListener('click', () => ctx.go('adjust'));
   $('#restart').addEventListener('click', () => {
+    // lewat hook foto agar thumbnail filter ikut dibuang
+    ctx.state.photos.forEach((photo, slot) => photo && ctx.notifyPhotoChanged(slot, photo));
     resetPhotos(ctx.state);
     clearFilteredCache();
     ctx.result.invalidate();

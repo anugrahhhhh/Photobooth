@@ -1,5 +1,5 @@
 import { $, $$, el, sleep } from '../dom.js';
-import { t } from '../../i18n.js';
+import { t, onLangChange } from '../../i18n.js';
 import * as camera from '../../camera.js';
 import { cameraErrorMessage, isFrontCamera, createRestartPolicy } from '../../camera.js';
 import { fitWithin } from '../../geometry.js';
@@ -42,16 +42,23 @@ function frontCamera() {
   });
 }
 
+function renderSlotLabel() {
+  const { state, session } = ctxRef;
+  const slot = currentSlot();
+  if (!state.template || slot < 0) return;
+  $('#slot-label').textContent = t(session.target != null ? 'booth.shoot.retakeOf' : 'booth.shoot.photoOf', {
+    i: slot + 1,
+    n: state.template.slots.length,
+  });
+}
+
 function updateView() {
   const { state, session } = ctxRef;
   const slots = state.template.slots;
   const slot = currentSlot();
   if (slot >= 0) {
     applyOverlay($('#viewfinder'), overlayLayout(state.template, slot), state.template);
-    $('#slot-label').textContent = t(session.target != null ? 'booth.shoot.retakeOf' : 'booth.shoot.photoOf', {
-      i: slot + 1,
-      n: slots.length,
-    });
+    renderSlotLabel();
   }
   $('#shoot-dots').replaceChildren(
     ...slots.map((_, i) => {
@@ -74,9 +81,11 @@ function syncControls() {
   $('#shoot-to-adjust').hidden = nextEmptySlot(ctxRef.state) >= 0;
 }
 
-function showCameraError(message) {
+function showCameraError(key) {
   cameraReady = false;
-  $('#camera-error-msg').textContent = message;
+  const msg = $('#camera-error-msg');
+  msg.dataset.i18n = key; // ikut berganti saat bahasa diubah
+  msg.textContent = t(key);
   $('#camera-error').hidden = false;
   syncControls();
 }
@@ -111,7 +120,7 @@ async function startCamera(pref) {
     setCameraSwitching(false);
     cameraInfo = null;
     autoPending = false;
-    showCameraError(t(cameraErrorMessage(err)));
+    showCameraError(cameraErrorMessage(err));
   }
 }
 
@@ -130,7 +139,7 @@ async function refreshCameraList() {
 function recoverCamera() {
   if (!onShoot() || !cameraWanted) return;
   if (restartPolicy.shouldRetry()) startCamera();
-  else showCameraError(t('booth.shoot.cameraLost'));
+  else showCameraError('booth.shoot.cameraLost');
 }
 
 function cancelRun() {
@@ -291,6 +300,7 @@ async function addFromGallery(files) {
 
 export function init(ctx) {
   ctxRef = ctx;
+  onLangChange(() => onShoot() && renderSlotLabel());
   $('#shoot').addEventListener('click', runSequence);
   $('#cancel').addEventListener('click', cancelRun);
   $('#camera-retry').addEventListener('click', () => {

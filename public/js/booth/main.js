@@ -25,7 +25,6 @@ const DEFAULT_SETTINGS = {
   kiosk_idle_seconds: 90,
   review_seconds: 3,
   sound_default: 1,
-  kiosk_available: false,
 };
 
 const IDLE_WARN_MS = 10_000;
@@ -74,6 +73,7 @@ function createCtx(settings) {
       renderSteps(name);
       scrollTo(0, 0);
       SCREENS[name].enter(ctx, params);
+      focusHeading(name, ctx, visits);
     },
   };
   ctx.setKioskOn = (on) => {
@@ -82,6 +82,15 @@ function createCtx(settings) {
     applyKioskLock(ctx, on);
   };
   return ctx;
+}
+
+// Fokus pindah ke judul layar baru agar pembaca layar tahu layar berganti (tanpa menggulir).
+function focusHeading(name, ctx, visits) {
+  if (name === 'welcome' && (ctx.kiosk() || visits === 1)) return;
+  const heading = $(`[data-screen="${name}"] :is(h1, h2):not([hidden])`);
+  if (!heading) return;
+  if (!heading.hasAttribute('tabindex')) heading.tabIndex = -1;
+  heading.focus({ preventScroll: true });
 }
 
 let detachIdle = null;
@@ -194,7 +203,14 @@ async function start() {
   const ctx = createCtx({ ...DEFAULT_SETTINGS });
   initSound(ctx.settings);
   const syncSound = bindSoundToggle();
-  initKiosk(ctx, { onSoundChange: syncSound });
+  const staffChanged = () => welcome.staffChanged(ctx);
+  initKiosk(ctx, {
+    onSoundChange: () => {
+      syncSound();
+      staffChanged();
+    },
+    onLangDefaultChange: staffChanged,
+  });
   for (const screen of Object.values(SCREENS)) screen.init(ctx);
   document.addEventListener('contextmenu', (e) => {
     if (ctx.kiosk()) e.preventDefault();

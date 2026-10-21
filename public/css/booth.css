@@ -219,7 +219,9 @@
   transform: rotate(-90deg);
 }
 .kiosk-ring circle { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; }
-.pin-dialog, .staff-menu { width: min(92vw, 360px); }
+.pin-dialog, .staff-menu, .drop-dialog { width: min(92vw, 360px); }
+.drop-dialog p { margin: 0 0 16px; }
+h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .pin-input { width: 100%; margin: 12px 0 4px; font-size: 28px; text-align: center; letter-spacing: .4em; }
 .pin-error { min-height: 1.5em; margin: 0 0 8px; text-align: center; }
 .pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
@@ -230,7 +232,11 @@
 
 /* Mode kiosk */
 body.kiosk [data-kiosk-hide] { display: none !important; }
+/* Sudut petugas (64px, tetap) tidak boleh menutupi kontrol header, di semua lebar layar. */
+body.kiosk .booth-header { padding-right: 80px; }
 body.kiosk, body.kiosk *:not(input, textarea) { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+/* Tekan lama simpan gambar (iOS lama) tetap berfungsi di kiosk. */
+body.kiosk .save-overlay img { -webkit-touch-callout: default; }
 .welcome-kiosk { display: none; }
 body.kiosk .welcome { display: none; }
 body.kiosk .welcome-kiosk {

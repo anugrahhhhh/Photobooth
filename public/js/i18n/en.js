@@ -67,6 +67,8 @@ export default {
   'booth.pick.empty': 'No active templates yet. Please ask the booth staff.',
   'booth.pick.loadError': 'Could not load the template list. Try again.',
   'booth.pick.templateError': 'Could not load the template. Try again or pick another.',
+  'booth.pick.confirmContinue': 'Continue',
+  'booth.pick.confirmCancel': 'Cancel',
   'booth.pick.confirmDrop': 'This template only has {slots} slots. The last {n} photos will be discarded. Continue?',
   'booth.adjust.canvas': "Photostrip preview. Tap a slot to select it, drag to adjust its position.",
   'booth.adjust.hint': "Tap a photo to select it, drag to adjust, pinch to zoom.",

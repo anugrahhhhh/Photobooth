@@ -11,8 +11,22 @@ let templates = [];
 let filterCount = null; // null = Semua
 let loadingId = null;
 
+// Dialog di halaman (bukan confirm()): confirm() menahan timer sehingga reset idle kiosk beku.
+// Ditutup dengan cara apa pun selain "Lanjutkan" (Esc, idle) berarti batal.
+function confirmDrop(text) {
+  const dialog = $('#drop-dialog');
+  $('#drop-text').textContent = text;
+  dialog.returnValue = '';
+  return new Promise((resolve) => {
+    dialog.addEventListener('close', () => resolve(dialog.returnValue === 'ok'), { once: true });
+    dialog.showModal();
+  });
+}
+
 export function init(ctx) {
   ctxRef = ctx;
+  $('#drop-continue').addEventListener('click', () => $('#drop-dialog').close('ok'));
+  $('#drop-cancel').addEventListener('click', () => $('#drop-dialog').close('cancel'));
   $('#pick-back').addEventListener('click', () => ctx.go('adjust'));
   $('#pick-retry').addEventListener('click', () => loadTemplates());
   // Chip dan label jumlah foto ikut bahasa baru.
@@ -32,6 +46,7 @@ export function enter(ctx, { mode = 'start' } = {}) {
 }
 
 export function leave(ctx) {
+  $('#drop-dialog').close();
   picking.cancel();
   loadingId = null;
 }
@@ -112,7 +127,10 @@ async function pickTemplate(tpl) {
     const { state } = ctx;
     if (ctx.session.pickMode === 'change') {
       const n = wouldDrop(state, tpl);
-      if (n > 0 && !confirm(t('booth.pick.confirmDrop', { slots: tpl.slots.length, n }))) return;
+      if (n > 0) {
+        const ok = await confirmDrop(t('booth.pick.confirmDrop', { slots: tpl.slots.length, n }));
+        if (!ok || !picking.isCurrent(token) || ctx.visit() !== visit) return;
+      }
     } else {
       ctx.resetSession();
       ctx.session.pickMode = 'start';

@@ -67,6 +67,8 @@ export default {
   'booth.pick.empty': 'Belum ada template aktif. Hubungi petugas booth.',
   'booth.pick.loadError': 'Daftar template gagal dimuat. Coba lagi.',
   'booth.pick.templateError': 'Template gagal dimuat. Coba lagi atau pilih yang lain.',
+  'booth.pick.confirmContinue': 'Lanjutkan',
+  'booth.pick.confirmCancel': 'Batal',
   'booth.pick.confirmDrop': 'Template ini hanya punya {slots} slot. {n} foto terakhir akan dibuang. Lanjutkan?',
   'booth.adjust.canvas': "Pratinjau photostrip. Ketuk slot untuk memilih, geser untuk mengatur posisi.",
   'booth.adjust.hint': "Ketuk foto untuk memilih, geser untuk mengatur, cubit untuk zoom.",
