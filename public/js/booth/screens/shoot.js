@@ -328,10 +328,13 @@ export function init(ctx) {
   }
   camera.onStreamLost(() => recoverCamera());
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState !== 'visible' || !onShoot() || ctx.kiosk()) return; // kiosk: main.js yang mengurus
-    // Sistem melepas wake lock saat tab tersembunyi, tetapi held() masih true: lepas dulu.
-    ctx.wakeLock.release();
-    ctx.wakeLock.acquire();
+    if (document.visibilityState !== 'visible' || !onShoot()) return;
+    if (!ctx.kiosk()) {
+      // Sistem melepas wake lock saat tab tersembunyi, tetapi held() masih true: lepas dulu.
+      // Di kiosk, main.js yang memegang wake lock.
+      ctx.wakeLock.release();
+      ctx.wakeLock.acquire();
+    }
     if (cameraWanted && !camera.isLive()) recoverCamera();
   });
   addEventListener('pagehide', () => camera.stop());

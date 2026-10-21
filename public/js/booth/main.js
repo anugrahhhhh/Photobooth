@@ -205,14 +205,6 @@ async function start() {
     ctx.wakeLock.release();
     ctx.wakeLock.acquire();
   });
-  // Fullscreen butuh gestur yang sah; untuk sentuhan itu pointerup, bukan pointerdown.
-  document.addEventListener(
-    'pointerup',
-    () => {
-      if (ctx.kiosk() && !document.fullscreenElement) document.documentElement.requestFullscreen?.()?.catch(() => {});
-    },
-    { capture: true, once: true },
-  );
   applyKioskLock(ctx, ctx.kiosk());
   ctx.go('welcome');
   Object.assign(ctx.settings, await getJSON('/api/settings').catch(() => ({})));

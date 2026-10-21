@@ -12,14 +12,27 @@ let slideTimer = 0;
 let loadToken = 0;
 
 function start(ctx) {
+  if (ctx.screen() !== 'welcome') return;
   unlock(); // ketukan pertama membuka audio
+  // dipanggil dari gestur pengguna (click/keydown), jadi fullscreen diizinkan
+  if (ctx.kiosk() && document.fullscreenEnabled && !document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  }
   ctx.go('pick', { mode: 'start' });
 }
 
 export function init(ctx) {
   ctxRef = ctx;
   $('#start').addEventListener('click', () => start(ctx));
-  $('#welcome-kiosk').addEventListener('pointerdown', () => start(ctx));
+  // click (bukan pointerdown): untuk sentuhan, hanya pointerup/click yang dihitung sebagai gestur fullscreen
+  $('#welcome-kiosk').addEventListener('click', () => start(ctx));
+  document.addEventListener('keydown', (e) => {
+    if ((e.key !== 'Enter' && e.key !== ' ') || e.repeat) return;
+    if (!ctx.kiosk() || ctx.screen() !== 'welcome' || document.querySelector('dialog[open]')) return;
+    if (e.target.id === 'welcome-tap') return; // tombol memicu click sendiri
+    e.preventDefault();
+    start(ctx);
+  });
   onLangChange(() => {
     if (ctx.kiosk() && ctx.screen() === 'welcome') renderCaption();
   });

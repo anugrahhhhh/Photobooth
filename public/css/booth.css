@@ -220,7 +220,7 @@
 
 /* Mode kiosk */
 body.kiosk [data-kiosk-hide] { display: none !important; }
-body.kiosk, body.kiosk * { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+body.kiosk, body.kiosk *:not(input, textarea) { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .welcome-kiosk { display: none; }
 body.kiosk .welcome { display: none; }
 body.kiosk .welcome-kiosk {
@@ -238,13 +238,23 @@ body.kiosk .welcome-kiosk {
   background: var(--bg);
 }
 .welcome-kiosk h1 { margin: 0; font-size: clamp(40px, 9vw, 88px); }
-.welcome-slides { position: relative; width: min(70vw, 360px); height: min(46vh, 480px); }
+.welcome-slides {
+  position: relative;
+  width: min(60vw, 300px);
+  aspect-ratio: 3 / 4;
+  max-height: 46vh;
+  padding: 10px;
+  background: var(--surface);
+  border: var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+}
 .welcome-slides[hidden] { display: none; }
 .welcome-slides img {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  inset: 10px;
+  width: calc(100% - 20px);
+  height: calc(100% - 20px);
   object-fit: contain;
   opacity: 0;
   transition: opacity .8s ease;
@@ -252,13 +262,11 @@ body.kiosk .welcome-kiosk {
 }
 .welcome-slides img.active { opacity: 1; }
 .welcome-tap {
-  margin: 0;
-  padding: 18px 40px;
-  min-height: 44px;
-  font-size: clamp(22px, 5vw, 36px);
-  color: var(--on-primary);
-  background: var(--primary);
-  border-radius: 999px;
+  padding: 0 44px;
+  min-height: 72px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(22px, 5vw, 34px);
 }
 .welcome-caption { margin: 0; color: var(--muted); font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .welcome-slides img { transition: none; } }
