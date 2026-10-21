@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="id" data-skin="clean">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pengaturan — Photobooth</title>
+    <script src="/js/theme-boot.js"></script>
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/admin.css" />
+    <script type="module" src="/admin/admin.js"></script>
+  </head>
+  <body data-page="settings">
+    <main id="content">
+      <header class="page-head"><h1>Pengaturan</h1></header>
+
+      <form id="settings-form" class="settings-form-wrap" novalidate>
+        <section class="card section">
+          <h2>Booth</h2>
+          <div class="settings-form">
+            <div class="field">
+              <label for="countdown_seconds">Hitung mundur (detik)</label>
+              <input id="countdown_seconds" class="input" name="countdown_seconds" type="number" min="1" max="10" step="1" required />
+            </div>
+            <label class="check">
+              <input name="mirror_output" type="checkbox" class="switch" role="switch" />
+              Cerminkan hasil foto kamera depan
+            </label>
+            <div class="field">
+              <label for="review_seconds">Waktu tinjau (detik)</label>
+              <input id="review_seconds" class="input" name="review_seconds" type="number" min="0" max="10" step="1" required />
+              <span class="hint">0 = tanpa tinjau</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="card section">
+          <h2>Kiosk</h2>
+          <div class="settings-form">
+            <div class="field">
+              <label for="kiosk_idle_seconds">Batas menganggur (detik)</label>
+              <input id="kiosk_idle_seconds" class="input" name="kiosk_idle_seconds" type="number" min="30" max="600" step="1" required />
+              <span class="hint">Booth kembali ke layar awal setelah tidak disentuh selama ini (30–600).</span>
+            </div>
+            <label class="check">
+              <input name="sound_default" type="checkbox" class="switch" role="switch" />
+              Suara aktif secara default
+            </label>
+          </div>
+        </section>
+
+        <div class="settings-actions">
+          <button type="submit" class="btn btn-primary">Simpan pengaturan</button>
+          <p id="settings-status" class="status-msg" role="status"></p>
+        </div>
+      </form>
+
+      <section class="card section">
+        <h2>PIN kiosk</h2>
+        <div class="settings-form">
+          <p id="pin-state" class="status-msg" role="status">Memuat…</p>
+          <form id="pin-form" class="field" novalidate>
+            <label for="pin">PIN baru (4–8 angka)</label>
+            <div class="pin-row">
+              <input id="pin" class="input" name="pin" type="password" inputmode="numeric" pattern="\d{4,8}" maxlength="8" autocomplete="new-password" />
+              <button type="submit" class="btn btn-primary">Simpan PIN</button>
+              <button type="button" id="pin-delete" class="btn" disabled>Hapus PIN</button>
+            </div>
+          </form>
+          <p id="pin-status" class="status-msg" role="status"></p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -54,3 +54,28 @@ test('stats: top 5 urut count menurun, memuat template arsip', async () => {
     [6, 5, 4, 3, 2],
   );
 });
+
+test('stats: tanpa sesi → daily 14 hari semua 0, sessions_7d 0', async () => {
+  const res = await agent.get('/api/admin/stats');
+  assert.equal(res.body.daily.length, 14);
+  assert.equal(res.body.daily[0].date, '2026-09-30');
+  assert.equal(res.body.daily[13].date, '2026-10-13');
+  assert.ok(res.body.daily.every((d) => d.count === 0));
+  assert.equal(res.body.sessions_7d, 0);
+});
+
+test('stats: sessions_7d dan daily memakai batas hari Asia/Jakarta', async () => {
+  const id = await insertSample(ctx.db, ctx.storage);
+  log(id, '2026-10-12T17:00:00.000Z'); // 13 Okt 00:00 WIB
+  log(id, '2026-10-06T17:00:00.000Z'); // 7 Okt 00:00 WIB → masuk 7 hari
+  log(id, '2026-10-06T16:59:59.999Z'); // 6 Okt → di luar 7 hari
+  log(id, '2026-09-29T16:59:59.999Z'); // 29 Sep → di luar 14 hari
+  log(id, '2026-10-13T17:00:00.000Z'); // besok
+  const res = await agent.get('/api/admin/stats');
+  const byDate = Object.fromEntries(res.body.daily.map((d) => [d.date, d.count]));
+  assert.equal(res.body.sessions_7d, 2);
+  assert.equal(byDate['2026-10-13'], 1);
+  assert.equal(byDate['2026-10-07'], 1);
+  assert.equal(byDate['2026-10-06'], 1);
+  assert.equal(res.body.daily.reduce((s, d) => s + d.count, 0), 3);
+});

@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { HttpError } from '../lib/http-error.js';
 import { getSettings, SETTINGS_SCHEMA } from '../db/index.js';
+import { hasKioskPin } from './kiosk.js';
 
 export function publicSettingsRouter({ db }) {
   const router = Router();
-  router.get('/', (req, res) => res.json(getSettings(db)));
+  router.get('/', (req, res) => res.json({ ...getSettings(db), kiosk_available: hasKioskPin(db) }));
   return router;
 }
 
@@ -15,7 +16,7 @@ export function adminSettingsRouter({ db }) {
   router.put('/', (req, res) => {
     const body = req.body;
     if (!body || typeof body !== 'object' || Array.isArray(body)) throw new HttpError(400, 'Body harus berupa objek');
-    const unknown = Object.keys(body).filter((k) => !(k in SETTINGS_SCHEMA));
+    const unknown = Object.keys(body).filter((k) => !Object.hasOwn(SETTINGS_SCHEMA, k));
     if (unknown.length) throw new HttpError(400, `Pengaturan tidak dikenal: ${unknown.join(', ')}`);
     for (const [key, value] of Object.entries(body)) {
       const { min, max } = SETTINGS_SCHEMA[key];

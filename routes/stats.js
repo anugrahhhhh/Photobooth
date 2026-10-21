@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { HttpError } from '../lib/http-error.js';
-import { dayBoundsUTC } from '../lib/time.js';
+import { addDays, dayBoundsUTC, dayBoundsUTCForDate, localDate } from '../lib/time.js';
 
 // Semua tamu di satu booth berbagi IP yang sama, jadi batasnya longgar.
 export const SESSION_LOG_LIMIT = 120;
@@ -45,13 +45,26 @@ export function adminStatsRouter({ db, tz, now }) {
     const { n: sessionsToday } = db
       .prepare('SELECT COUNT(*) AS n FROM session_logs WHERE created_at >= ? AND created_at < ?')
       .get(start, end);
+    const today = localDate(now(), tz);
+    const dayCounts = new Map();
+    for (let i = 13; i >= 0; i--) dayCounts.set(addDays(today, -i), 0);
+    const rangeStart = dayBoundsUTCForDate(addDays(today, -13), tz).start;
+    const rows = db
+      .prepare('SELECT created_at FROM session_logs WHERE created_at >= ? AND created_at < ?')
+      .all(rangeStart, end);
+    for (const { created_at } of rows) {
+      const d = localDate(new Date(created_at), tz);
+      if (dayCounts.has(d)) dayCounts.set(d, dayCounts.get(d) + 1);
+    }
+    const daily = [...dayCounts].map(([date, count]) => ({ date, count }));
+    const sessions7d = daily.slice(-7).reduce((sum, d) => sum + d.count, 0);
     const top = db
       .prepare(
         `SELECT t.id, t.name, COUNT(*) AS count FROM session_logs l JOIN templates t ON t.id = l.template_id
          GROUP BY t.id ORDER BY count DESC, t.id ASC LIMIT 5`,
       )
       .all();
-    res.json({ templates, sessions_today: sessionsToday, top });
+    res.json({ templates, sessions_today: sessionsToday, sessions_7d: sessions7d, daily, top });
   });
 
   return router;

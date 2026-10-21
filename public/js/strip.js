@@ -5,9 +5,17 @@ import { clampTransform, photoRect, DEFAULT_TRANSFORM } from './geometry.js';
 // mapPhoto(photo, i), bila ada, membuat salinan sementara per slot yang langsung dilepas setelah
 // digambar, sehingga hanya satu salinan resolusi penuh yang hidup sekaligus (hemat memori ponsel).
 export function render(canvas, { template, img, photos = [], transforms = [], filtered = [], scale = 1, mapPhoto }) {
-  canvas.width = Math.round(template.canvas_w * scale);
-  canvas.height = Math.round(template.canvas_h * scale);
+  const w = Math.round(template.canvas_w * scale);
+  const h = Math.round(template.canvas_h * scale);
   const ctx = canvas.getContext('2d');
+  // Mengubah ukuran kanvas mereset bufernya dan mahal; bila ukuran sama cukup dibersihkan.
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  } else {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+  }
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   ctx.fillStyle = template.bg_color;

@@ -10,6 +10,7 @@ export function createState() {
     filter: 'normal',
     facingRequested: 'user',
     logged: false,
+    logging: false,
   };
 }
 
@@ -51,6 +52,19 @@ export function resetPhotos(state) {
   state.photos = [];
   state.transforms = defaultTransforms(state.template?.slots.length ?? 0);
   state.logged = false;
+  state.logging = false;
+}
+
+// Log sesi dikirim sekali saja, walau Unduh diketuk dua kali. Gagal boleh dicoba lagi.
+export async function logSessionOnce(state, send) {
+  if (state.logged || state.logging) return;
+  state.logging = true;
+  try {
+    await send();
+    state.logged = true;
+  } finally {
+    state.logging = false;
+  }
 }
 
 export function resetAll(state) {

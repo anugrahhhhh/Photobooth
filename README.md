@@ -1,6 +1,6 @@
 # Photobooth
 
-Photobooth digital berbasis browser. Desain: [docs/superpowers/specs/2026-10-12-photobooth-design.md](docs/superpowers/specs/2026-10-12-photobooth-design.md).
+Photobooth digital berbasis browser. Desain: [docs/superpowers/specs/2026-10-12-photobooth-design.md](docs/superpowers/specs/2026-10-12-photobooth-design.md); desain ulang landing, booth, admin, dan kiosk: [docs/superpowers/specs/2026-10-12-redesign-kiosk-design.md](docs/superpowers/specs/2026-10-12-redesign-kiosk-design.md).
 
 Butuh Node.js 22.9 atau lebih baru.
 
@@ -28,7 +28,7 @@ npm run dev        # atau: npm start
 npm test
 ```
 
-Admin: `http://localhost:3000/admin`.
+Landing: `http://localhost:3000/`. Booth: `http://localhost:3000/booth`. Admin: `http://localhost:3000/admin`.
 
 ## Seed
 
@@ -41,6 +41,57 @@ Admin: `http://localhost:3000/admin`.
 `npm run backup` menyalin database **dan** folder `uploads/templates` bersama-sama ke `backups/<YYYY-MM-DD-HHmmss>/`. Keduanya harus selalu dipulihkan bersama, karena database menyimpan nama file template.
 
 ## Deploy
+
+### Fly.io (disarankan)
+
+`fly.toml` dan `Dockerfile` sudah menyetel region Singapore (`sin`), volume `/data`, health check `/healthz`, dan satu mesin. Image di-build di server Fly, jadi Docker tidak perlu terpasang.
+
+1. Pasang flyctl (PowerShell): `iwr https://fly.io/install.ps1 -useb | iex`, lalu buka terminal baru.
+2. `fly auth signup` (atau `fly auth login`). Fly meminta kartu kredit untuk verifikasi.
+3. Buat app (ganti `photobooth-anugrah` di `fly.toml` bila nama sudah dipakai): `fly apps create photobooth-anugrah`
+4. Buat volume 1 GB di Singapore: `fly volumes create photobooth_data --region sin --size 1`
+5. Isi rahasia:
+   `fly secrets set SESSION_SECRET=<string-acak> ADMIN_USERNAME=admin ADMIN_PASSWORD=<password-minimal-8>`
+6. Deploy: `fly deploy --remote-only`. Aplikasi ada di `https://photobooth-anugrah.fly.dev`.
+
+**Deploy otomatis dari GitHub:** buat token dengan `fly tokens create deploy`, lalu simpan di GitHub repo → **Settings → Secrets and variables → Actions → New repository secret** dengan nama `FLY_API_TOKEN`. Setelah itu, setiap push ke cabang `feat/redesign-kiosk` menjalankan `npm test` lalu deploy (`.github/workflows/fly-deploy.yml`). Tanpa token, langkah deploy dilewati.
+
+Mesin berhenti otomatis saat sepi untuk menghemat biaya, sehingga kunjungan pertama butuh beberapa detik untuk menyala. Untuk acara, ubah `min_machines_running = 1` di `fly.toml` lalu deploy ulang.
+
+### Render
+
+`render.yaml` (Blueprint) sudah menyetel service Node di region Singapore, disk persisten 1 GB di `/data`, health check `/healthz`, `SESSION_SECRET` acak, dan deploy otomatis dari cabang `feat/redesign-kiosk`. Ganti `branch` di file itu bila cabang produksinya berubah.
+
+1. Di [dashboard.render.com](https://dashboard.render.com): **New → Blueprint** → hubungkan GitHub → pilih repo ini.
+2. Render membaca `render.yaml` dan meminta nilai `ADMIN_USERNAME` serta `ADMIN_PASSWORD` (minimal 8 karakter). Isi, lalu **Apply**.
+3. Setelah deploy selesai, aplikasi ada di `https://photobooth-xxxx.onrender.com`.
+
+Disk persisten hanya tersedia di paket berbayar, jadi service ini tidak bisa memakai paket free. Service dengan disk tidak bisa di-scale ke lebih dari satu instance, dan itu memang yang dibutuhkan SQLite.
+
+### Railway
+
+`railway.json` sudah menyetel perintah start, health check `/healthz`, dan satu instance.
+
+1. Di [railway.com](https://railway.com): **New Project → Deploy from GitHub repo** → pilih repo ini dan cabang yang mau di-deploy.
+2. Buka service → **Settings → Volumes → Add Volume**, mount path `/data`.
+3. **Variables**:
+
+   | Variable | Nilai |
+   |---|---|
+   | `NODE_ENV` | `production` |
+   | `SESSION_SECRET` | string acak panjang (lihat perintah di bagian Env) |
+   | `DB_PATH` | `/data/photobooth.db` |
+   | `UPLOAD_DIR` | `/data/uploads` |
+   | `TZ` | `Asia/Jakarta` |
+   | `ADMIN_USERNAME` | nama admin pertama |
+   | `ADMIN_PASSWORD` | password admin pertama (minimal 8 karakter) |
+
+   `PORT` diisi Railway otomatis. `ADMIN_USERNAME`/`ADMIN_PASSWORD` hanya dipakai saat database belum punya user; setelah admin dibuat, keduanya boleh dihapus.
+4. **Settings → Networking → Generate Domain**. Alamat `https://….up.railway.app` langsung HTTPS, jadi kamera berfungsi.
+
+Setiap push ke cabang tersebut akan otomatis di-deploy ulang. Database dan template tersimpan di volume, jadi tidak hilang saat deploy.
+
+### Umum
 
 **Di balik reverse proxy** (nginx dan sejenisnya), di produksi server memakai `trust proxy` dan butuh header berikut. Tanpa header ini, login admin gagal: `checkOrigin` menolak dengan 403 atau cookie `secure` tidak terpasang.
 
@@ -75,3 +126,13 @@ Checklist uji lintas perangkat ada di [docs/manual-test.md](docs/manual-test.md)
 - Ponsel dalam posisi potret biasanya memberi frame potret, jadi masalah ini tidak terjadi di sana.
 - **Saran untuk admin:** pakai slot lanskap jika booth memakai webcam laptop.
 - Pratinjau kamera depan selalu dicermin. Hasil foto dicermin hanya jika "Cerminkan hasil foto kamera depan" aktif di dashboard. Kamera belakang dan foto dari galeri tidak pernah dicermin.
+
+## Mode kiosk
+
+Mode kiosk mengunci booth untuk dipakai tamu tanpa petugas: layar sambutan penuh, tombol keluar disembunyikan, layar tetap menyala, dan sesi kembali ke awal sendiri bila ditinggalkan.
+
+- **Atur PIN:** di admin, buka Pengaturan lalu isi PIN petugas (4-8 digit). Tanpa PIN, kiosk tidak bisa diaktifkan. Lama menganggur sebelum reset diatur lewat `kiosk_idle_seconds` (30-600 detik).
+- **Masuk dan keluar:** tekan lama logo selama 3 detik (di layar sambutan kiosk, tekan lama sudut kanan atas layar), masukkan PIN, lalu pilih "Aktifkan kiosk" atau "Nonaktifkan kiosk" di menu petugas. Status disimpan per perangkat. Bila kiosk sedang menyala dan PIN sudah dihapus admin, tekan lama langsung membuka menu petugas (tidak ada lagi yang dilindungi) supaya kiosk tetap bisa dimatikan.
+- **iPhone dan iPad:** Safari tidak punya layar penuh untuk halaman web, jadi aktifkan **Akses Terpandu**: Pengaturan > Aksesibilitas > Akses Terpandu, nyalakan, lalu buka booth dan tekan tombol samping tiga kali untuk memulai.
+- **PIN salah:** setelah 5 kali salah dari satu alamat IP, verifikasi dikunci 15 menit (booth menampilkan pesan batas percobaan). Hanya percobaan gagal yang dihitung.
+- **Darurat, server tidak bisa dihubungi:** PIN diperiksa di server, jadi tanpa koneksi kiosk tidak bisa dimatikan lewat menu. Status kiosk tersimpan di perangkat (bertahan walau tab ditutup dan dibuka lagi), jadi satu-satunya jalan keluar adalah menghapus data situs untuk alamat booth di pengaturan browser (ini menghapus status kiosk di perangkat itu).

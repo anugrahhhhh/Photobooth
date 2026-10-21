@@ -6,3 +6,4 @@ backups/
 *.db
 *.db-wal
 *.db-shm
+.superpowers/

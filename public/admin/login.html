@@ -1,25 +1,29 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-skin="clean">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Login Admin — Photobooth</title>
-    <link rel="stylesheet" href="/css/app.css" />
+    <script src="/js/theme-boot.js"></script>
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/admin.css" />
     <script type="module" src="/admin/admin.js"></script>
   </head>
   <body data-page="login">
-    <main class="login-wrap">
-      <form id="login-form" class="card" novalidate>
-        <h1>Admin Photobooth</h1>
-        <label>
-          Username
-          <input name="username" autocomplete="username" required autofocus />
-        </label>
-        <label>
-          Password
-          <input name="password" type="password" autocomplete="current-password" required />
-        </label>
-        <button type="submit" class="primary">Masuk</button>
+    <main id="content" class="login-wrap">
+      <form id="login-form" class="card card-lg login-card" novalidate>
+        <div class="login-brand"><span class="logo" aria-hidden="true"></span><span>Photobooth</span></div>
+        <h1>Masuk admin</h1>
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" class="input" name="username" autocomplete="username" required autofocus />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" class="input" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Masuk</button>
         <p id="login-status" class="status-msg" role="alert"></p>
       </form>
     </main>

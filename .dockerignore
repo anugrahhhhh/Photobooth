@@ -1,0 +1,13 @@
+node_modules
+data
+uploads
+backups
+.env
+.git
+.github
+.superpowers
+docs
+test
+*.db
+*.db-wal
+*.db-shm

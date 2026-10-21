@@ -77,5 +77,12 @@ test(`POST /api/sessions ke-${SESSION_LOG_LIMIT + 1} dalam 10 menit → 429`, as
 test('GET /api/settings publik tanpa login', async () => {
   const res = await request(ctx.app).get('/api/settings');
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body, { countdown_seconds: 3, mirror_output: 0 });
+  assert.deepEqual(res.body, {
+    countdown_seconds: 3,
+    mirror_output: 0,
+    kiosk_idle_seconds: 90,
+    review_seconds: 3,
+    sound_default: 1,
+    kiosk_available: false,
+  });
 });

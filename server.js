@@ -7,12 +7,14 @@ import helmet from 'helmet';
 import multer from 'multer';
 import { loadConfig } from './config.js';
 import { openDb } from './db/index.js';
+import { bootstrapAdmin } from './db/seed-admin.js';
 import { createStorage } from './storage/index.js';
 import { HttpError } from './lib/http-error.js';
 import { authRouter } from './routes/auth.js';
 import { adminTemplatesRouter, publicTemplatesRouter } from './routes/templates.js';
 import { sessionsRouter, adminStatsRouter } from './routes/stats.js';
 import { publicSettingsRouter, adminSettingsRouter } from './routes/settings.js';
+import { kioskAdminRouter, kioskPublicRouter } from './routes/kiosk.js';
 import { requireAdmin } from './middleware/requireAdmin.js';
 import { checkOrigin } from './middleware/checkOrigin.js';
 
@@ -78,6 +80,7 @@ export function createApp({ config, db, storage, now = () => new Date(), extraRo
     }),
   );
   app.get(['/admin', '/admin/'], (req, res) => res.redirect('/admin/dashboard.html'));
+  app.get('/booth', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'booth.html')));
   app.use(express.static(PUBLIC_DIR));
 
   app.get('/healthz', (req, res) => {
@@ -101,10 +104,12 @@ export function createApp({ config, db, storage, now = () => new Date(), extraRo
   app.use('/api/admin/templates', adminTemplatesRouter({ db, storage }));
   app.use('/api/admin/stats', adminStatsRouter({ db, tz: config.tz, now }));
   app.use('/api/admin/settings', adminSettingsRouter({ db }));
+  app.use('/api/admin/kiosk-pin', kioskAdminRouter({ db }));
 
   app.use('/api/templates', publicTemplatesRouter({ db, storage }));
   app.use('/api/sessions', sessionsRouter({ db }));
   app.use('/api/settings', publicSettingsRouter({ db }));
+  app.use('/api/kiosk', noStore, checkOrigin, kioskPublicRouter({ db }));
 
   extraRoutes?.(app);
 
@@ -131,9 +136,10 @@ function classify(err) {
   return [500, 'Terjadi kesalahan pada server'];
 }
 
-function start() {
+async function start() {
   const config = loadConfig();
   const db = openDb(config.dbPath);
+  if ((await bootstrapAdmin(db)) === 'created') console.log(`Admin "${process.env.ADMIN_USERNAME}" dibuat dari env.`);
   const storage = createStorage(config.uploadDir);
   const app = createApp({ config, db, storage });
   const server = app.listen(config.port, () => console.log(`Photobooth berjalan di http://localhost:${config.port}`));
@@ -150,4 +156,9 @@ function start() {
   process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) start();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  start().catch((err) => {
+    console.error(err.message);
+    process.exit(1);
+  });
+}

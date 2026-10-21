@@ -1,27 +1,25 @@
 import { fitWithin } from './geometry.js';
+import { KEYS, read, write } from './storage.js';
 
 /* ---------- Bagian murni (diuji di Node) ---------- */
 
+// Mengembalikan kunci i18n; pemanggil menerjemahkannya dengan t().
 export function cameraErrorMessage(err) {
   switch (err?.name) {
     case 'InsecureContextError':
-      return 'Kamera hanya bisa dipakai jika situs dibuka lewat HTTPS.';
+      return 'camera.error.insecure';
     case 'NotAllowedError':
     case 'SecurityError':
-      return (
-        'Izin kamera ditolak. Chrome/Android: ketuk ikon di kiri alamat situs › Izin › Kamera › Izinkan, lalu muat ulang. ' +
-        'Safari iPhone/iPad: ketuk "aA" di bilah alamat › Pengaturan Situs Web › Kamera › Izinkan. ' +
-        'Laptop: klik ikon kamera di bilah alamat lalu izinkan.'
-      );
+      return 'camera.error.denied';
     case 'NotFoundError':
     case 'DevicesNotFoundError':
-      return 'Kamera tidak ditemukan. Sambungkan kamera atau pakai foto dari galeri.';
+      return 'camera.error.notFound';
     case 'NotReadableError':
     case 'TrackStartError':
     case 'AbortError':
-      return 'Kamera sedang dipakai aplikasi lain. Tutup aplikasi tersebut (Zoom, Meet, dan sejenisnya) lalu coba lagi.';
+      return 'camera.error.busy';
     default:
-      return 'Kamera tidak bisa dinyalakan. Coba muat ulang halaman atau pakai foto dari galeri.';
+      return 'camera.error.generic';
   }
 }
 
@@ -44,27 +42,17 @@ export function createRestartPolicy(max = 3) {
 
 /* ---------- Bagian DOM ---------- */
 
-const STORAGE_KEY = 'pb.cameraId';
 let stream = null;
 let lostHandler = null;
 // Naik setiap start()/stop(); start yang tersusul membuang stream yang didapatnya.
 let generation = 0;
 
 export function savedCameraId() {
-  try {
-    return localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return null;
-  }
+  return read(KEYS.cameraId);
 }
 
 export function saveCameraId(id) {
-  try {
-    if (id) localStorage.setItem(STORAGE_KEY, id);
-    else localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // penyimpanan tidak tersedia (mode privat)
-  }
+  write(KEYS.cameraId, id || null);
 }
 
 export function onStreamLost(cb) {
@@ -135,7 +123,7 @@ export async function listCameras() {
   const devices = await navigator.mediaDevices.enumerateDevices();
   return devices
     .filter((d) => d.kind === 'videoinput')
-    .map((d, i) => ({ deviceId: d.deviceId, label: d.label || `Kamera ${i + 1}` }));
+    .map((d) => ({ deviceId: d.deviceId, label: d.label || '' }));
 }
 
 export function flip(video, currentFacing) {

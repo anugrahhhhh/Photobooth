@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="id" data-skin="fun">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#FF5A4E" />
+    <title>Photobooth</title>
+    <script src="/js/theme-boot.js"></script>
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/booth.css" />
+    <script type="module" src="/js/booth/main.js"></script>
+  </head>
+  <body class="booth-app">
+    <header class="booth-header">
+      <span class="booth-logo" id="booth-logo">Photobooth</span>
+      <ol class="steps" id="steps" aria-label="Langkah" data-i18n-attr="aria-label:booth.steps.label" hidden>
+        <li data-step="pick" data-i18n="booth.steps.pick">Template</li>
+        <li data-step="shoot" data-i18n="booth.steps.shoot">Foto</li>
+        <li data-step="adjust" data-i18n="booth.steps.adjust">Atur</li>
+        <li data-step="result" data-i18n="booth.steps.result">Unduh</li>
+      </ol>
+      <div class="booth-header-tools">
+        <button type="button" class="btn btn-icon" id="sound-toggle" aria-label="Suara" aria-pressed="true" data-kiosk-hide data-i18n-attr="aria-label:booth.sound.toggle">&#128266;</button>
+        <div class="booth-menu" id="booth-menu">
+          <button type="button" class="btn btn-icon" id="menu-toggle" aria-expanded="false" aria-controls="menu-panel" aria-label="Menu" data-i18n-attr="aria-label:booth.menu.label">&#9776;</button>
+          <div class="booth-menu-panel card" id="menu-panel" hidden>
+            <div class="menu-row">
+              <span data-i18n="common.theme">Tema</span>
+              <button type="button" class="btn btn-icon" id="theme-toggle"></button>
+            </div>
+            <div class="menu-row">
+              <label for="lang-select" data-i18n="common.language">Bahasa</label>
+              <select id="lang-select" class="input">
+                <option value="id">Indonesia</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <a class="btn btn-secondary" href="/" data-kiosk-hide data-i18n="booth.menu.landing">Beranda</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="kiosk-corner" id="kiosk-corner" hidden></div>
+
+    <dialog class="dialog pin-dialog" id="pin-dialog" aria-labelledby="pin-title">
+      <h2 class="display" id="pin-title" data-i18n="kiosk.pin.title">PIN petugas</h2>
+      <input class="input pin-input" id="pin-input" type="password" inputmode="numeric" autocomplete="off" maxlength="8" readonly aria-label="PIN" data-i18n-attr="aria-label:kiosk.pin.label" />
+      <p class="status-msg pin-error" id="pin-error" role="alert"></p>
+      <div class="pin-keypad" id="pin-keypad"></div>
+      <button type="button" class="btn" id="pin-cancel" data-i18n="kiosk.pin.cancel">Batal</button>
+    </dialog>
+
+    <dialog class="dialog staff-menu" id="staff-menu" aria-labelledby="staff-title">
+      <h2 class="display" id="staff-title" data-i18n="kiosk.menu.title">Menu petugas</h2>
+      <div class="staff-list">
+        <button type="button" class="btn btn-primary btn-lg" id="staff-kiosk"></button>
+        <button type="button" class="btn btn-lg" id="staff-fullscreen" data-i18n="booth.shoot.fullscreen">Layar penuh</button>
+        <button type="button" class="btn btn-lg" id="staff-sound"></button>
+        <div class="menu-row">
+          <label for="staff-lang" data-i18n="kiosk.menu.lang">Bahasa default perangkat</label>
+          <select id="staff-lang" class="input">
+            <option value="id">Indonesia</option>
+            <option value="en">English</option>
+            <option value="" data-i18n="kiosk.menu.lang.browser">Ikuti browser</option>
+          </select>
+        </div>
+        <div class="menu-row">
+          <span data-i18n="common.theme">Tema</span>
+          <button type="button" class="btn btn-icon" id="staff-theme"></button>
+        </div>
+        <button type="button" class="btn btn-lg" id="staff-reload" data-i18n="kiosk.menu.reload">Muat ulang</button>
+        <button type="button" class="btn" id="staff-close" data-i18n="common.close">Tutup</button>
+      </div>
+    </dialog>
+
+    <dialog class="dialog drop-dialog" id="drop-dialog" aria-labelledby="drop-text">
+      <p id="drop-text"></p>
+      <div class="row">
+        <button type="button" class="btn btn-primary" id="drop-continue" data-i18n="booth.pick.confirmContinue">Lanjutkan</button>
+        <button type="button" class="btn" id="drop-cancel" data-i18n="booth.pick.confirmCancel">Batal</button>
+      </div>
+    </dialog>
+
+    <main class="booth-main">
+      <section data-screen="welcome">
+        <div class="inapp-banner card" id="inapp-banner" data-kiosk-hide hidden>
+          <p><strong data-i18n="booth.inapp.title">Buka di Chrome atau Safari</strong> <span data-i18n="booth.inapp.body">agar kamera dan unduhan berjalan lancar.</span></p>
+          <div class="row">
+            <input class="input" id="inapp-link" readonly aria-label="Link halaman ini" data-i18n-attr="aria-label:booth.inapp.link" />
+            <button type="button" class="btn" id="inapp-copy" data-i18n="booth.inapp.copy">Salin link</button>
+            <button type="button" class="btn" id="inapp-close" data-i18n="common.close">Tutup</button>
+          </div>
+        </div>
+        <div class="welcome-kiosk" id="welcome-kiosk">
+          <h1 class="display" id="welcome-kiosk-title">Photobooth</h1>
+          <div class="welcome-slides" id="welcome-slides" aria-hidden="true" hidden></div>
+          <button type="button" class="btn btn-primary btn-lg welcome-tap" id="welcome-tap" data-i18n="booth.welcome.tapToStart">Ketuk untuk mulai</button>
+          <p class="welcome-caption" id="welcome-caption"></p>
+        </div>
+        <div class="welcome card card-lg">
+          <h1 class="display" id="welcome-title">Photobooth</h1>
+          <p data-i18n="booth.welcome.tagline">Pilih bingkai, berpose, lalu unduh photostrip-mu.</p>
+          <button type="button" class="btn btn-primary btn-lg" id="start" data-i18n="common.start">Mulai</button>
+          <div class="welcome-tools">
+            <label class="visually-hidden" for="welcome-lang" data-i18n="common.language">Bahasa</label>
+            <select id="welcome-lang" class="input">
+              <option value="id">Indonesia</option>
+              <option value="en">English</option>
+            </select>
+            <button type="button" class="btn btn-icon" id="welcome-theme"></button>
+          </div>
+        </div>
+      </section>
+
+      <section data-screen="pick" hidden>
+        <div class="screen-head">
+          <h2 class="display" id="pick-title" tabindex="-1" data-i18n="booth.pick.title">Pilih template</h2>
+          <button type="button" class="btn" id="pick-back" data-i18n="booth.pick.back" hidden>Kembali</button>
+        </div>
+        <div class="chips" id="pick-chips" role="group" aria-label="Filter jumlah foto" data-i18n-attr="aria-label:booth.pick.filter"></div>
+        <p class="status-msg" id="pick-status" role="status"></p>
+        <button type="button" class="btn" id="pick-retry" data-i18n="common.retry" hidden>Coba lagi</button>
+        <div class="template-grid" id="template-grid"></div>
+      </section>
+
+      <section data-screen="shoot" hidden>
+        <h2 class="visually-hidden" data-i18n="booth.steps.shoot">Foto</h2>
+        <div class="shoot">
+          <div class="viewfinder" id="viewfinder">
+            <div class="overlay-hole"><video id="video" playsinline muted autoplay></video></div>
+            <img class="overlay-frame" alt="" draggable="false">
+            <div class="countdown display" id="countdown" hidden aria-live="assertive"></div>
+            <div class="flash" id="flash"></div>
+            <div class="camera-error card" id="camera-error" hidden>
+              <p id="camera-error-msg" role="alert"></p>
+              <div class="row">
+                <button type="button" class="btn" id="camera-retry" data-i18n="common.retry">Coba lagi</button>
+                <label class="btn btn-primary gallery-button">
+                  <span data-i18n="booth.shoot.galleryPick">Pilih dari galeri</span>
+                  <input type="file" accept="image/*" multiple class="gallery-input" />
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="shoot-panel">
+            <ol class="shoot-dots" id="shoot-dots" aria-hidden="true"></ol>
+            <p class="shoot-label" id="slot-label" role="status"></p>
+            <div class="shoot-controls">
+              <button type="button" class="btn btn-primary btn-lg" id="shoot" data-i18n="booth.shoot.take">Ambil foto</button>
+              <button type="button" class="btn btn-danger btn-lg" id="cancel" data-i18n="booth.shoot.cancel" hidden>Batal</button>
+            </div>
+            <div class="shoot-tools">
+              <button type="button" class="btn" id="flip" data-i18n="booth.shoot.flip" hidden>Balik kamera</button>
+              <select class="input" id="camera-select" hidden aria-label="Pilih kamera" data-i18n-attr="aria-label:booth.shoot.selectCamera"></select>
+              <button type="button" class="btn" id="fullscreen" data-kiosk-hide data-i18n="booth.shoot.fullscreen" hidden>Layar penuh</button>
+              <label class="btn btn-secondary gallery-button">
+                <span data-i18n="booth.shoot.gallery">Unggah dari galeri</span>
+                <input type="file" accept="image/*" multiple class="gallery-input" />
+              </label>
+              <button type="button" class="btn btn-primary" id="shoot-to-adjust" data-i18n="booth.shoot.toAdjust" hidden>Selesai</button>
+            </div>
+            <ul class="shoot-errors" id="gallery-errors"></ul>
+          </div>
+        </div>
+      </section>
+      <section data-screen="review" hidden>
+        <div class="shoot review">
+          <div class="viewfinder" id="review-frame">
+            <div class="overlay-hole"><canvas id="review-photo"></canvas></div>
+            <img class="overlay-frame" alt="" draggable="false">
+          </div>
+          <div class="shoot-panel">
+            <h2 class="shoot-label" data-i18n="booth.review.title">Tinjau</h2>
+            <div class="progress-bar review-bar" aria-hidden="true"><span id="review-bar"></span></div>
+            <div class="shoot-controls">
+              <button type="button" class="btn btn-lg" id="review-retake" data-i18n="booth.review.retake">Ulang</button>
+              <button type="button" class="btn btn-primary btn-lg" id="review-next" data-i18n="booth.review.next">Lanjut</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section data-screen="adjust" hidden>
+        <h2 class="visually-hidden" data-i18n="booth.steps.adjust">Atur</h2>
+        <div class="adjust">
+          <div class="adjust-stage" id="adjust-stage">
+            <canvas id="adjust-canvas" aria-label="Pratinjau photostrip. Ketuk slot untuk memilih, geser untuk mengatur posisi." data-i18n-attr="aria-label:booth.adjust.canvas"></canvas>
+          </div>
+          <div class="adjust-panel card">
+            <p class="hint" data-i18n="booth.adjust.hint">Ketuk foto untuk memilih, geser untuk mengatur, cubit untuk zoom.</p>
+            <div class="zoom-row">
+              <button type="button" id="zoom-out" class="btn btn-icon" aria-label="Perkecil" data-i18n-attr="aria-label:booth.adjust.zoomOut">&minus;</button>
+              <input type="range" id="zoom" class="range" min="1" max="3" step="0.01" value="1" aria-label="Zoom" data-i18n-attr="aria-label:booth.adjust.zoom" />
+              <button type="button" id="zoom-in" class="btn btn-icon" aria-label="Perbesar" data-i18n-attr="aria-label:booth.adjust.zoomIn">+</button>
+            </div>
+            <div class="filter-list" id="filters" role="radiogroup" aria-label="Filter" data-i18n-attr="aria-label:booth.adjust.filters"></div>
+            <div class="row">
+              <button type="button" id="retake" class="btn" data-i18n="booth.adjust.retake">Ulang foto ini</button>
+              <button type="button" id="change-template" class="btn" data-i18n="booth.adjust.changeTemplate">Ganti bingkai</button>
+            </div>
+            <button type="button" class="btn btn-primary btn-lg" id="to-result" data-i18n="booth.adjust.next">Lanjut</button>
+          </div>
+        </div>
+      </section>
+      <section data-screen="result" hidden>
+        <h2 class="visually-hidden" data-i18n="booth.steps.result">Unduh</h2>
+        <div class="result">
+          <img id="result-img" alt="Hasil photostrip" data-i18n-attr="alt:booth.result.alt" />
+          <div class="result-actions card">
+            <button type="button" class="btn btn-primary btn-lg" id="download" disabled data-i18n="booth.result.preparing">Menyiapkan...</button>
+            <div class="row">
+              <button type="button" id="back-to-adjust" class="btn" data-i18n="booth.result.backToAdjust">Atur lagi</button>
+              <button type="button" id="restart" class="btn" data-i18n="booth.result.restart">Ulang sesi</button>
+              <button type="button" id="new-session" class="btn" data-i18n="booth.result.newSession">Sesi baru</button>
+            </div>
+            <p class="status-msg" id="result-status" role="status"></p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="save-overlay" id="save-overlay" hidden>
+      <p data-i18n="booth.result.saveHint">Tekan lama gambar lalu pilih "Simpan".</p>
+      <img id="save-overlay-img" alt="Photostrip untuk disimpan" data-i18n-attr="alt:booth.result.saveAlt" />
+      <button type="button" id="save-overlay-close" class="btn btn-lg" data-i18n="common.close">Tutup</button>
+    </div>
+  </body>
+</html>

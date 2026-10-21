@@ -33,7 +33,13 @@ test('migrasi idempotent dan folder induk dibuat', () => {
 });
 
 test('default settings terisi', () => {
-  assert.deepEqual(getSettings(openDb(':memory:')), { countdown_seconds: 3, mirror_output: 0 });
+  assert.deepEqual(getSettings(openDb(':memory:')), {
+    countdown_seconds: 3,
+    mirror_output: 0,
+    kiosk_idle_seconds: 90,
+    review_seconds: 3,
+    sound_default: 1,
+  });
 });
 
 test('bg_color default #ffffff', () => {

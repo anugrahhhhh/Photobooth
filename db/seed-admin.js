@@ -30,6 +30,16 @@ export async function seedAdmin(db, { username, password, reset = false }) {
   }
 }
 
+// Admin pertama dari env (ADMIN_USERNAME/ADMIN_PASSWORD) untuk hosting tanpa akses terminal.
+// Hanya berjalan bila tabel users masih kosong, jadi aman dibiarkan terpasang.
+export async function bootstrapAdmin(db, env = process.env) {
+  const { ADMIN_USERNAME: username, ADMIN_PASSWORD: password } = env;
+  if (!username || !password) return 'skipped';
+  if (db.prepare('SELECT 1 FROM users LIMIT 1').get()) return 'skipped';
+  await seedAdmin(db, { username, password });
+  return 'created';
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2);
   const reset = args[0] === '--reset';
