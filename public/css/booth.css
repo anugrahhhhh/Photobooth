@@ -11,8 +11,18 @@
   gap: 8px 16px;
   padding: 12px 16px;
 }
-.booth-logo { font: 800 22px/1 var(--font-display); }
+.booth-logo { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; font: 800 22px/1 var(--font-display); }
 .booth-header-tools { display: flex; align-items: center; gap: 8px; }
+
+/* Layar sempit: baris 1 = logo + tombol, baris 2 = langkah ringkas (hanya label langkah aktif). */
+@media (max-width: 520px) {
+  .booth-header { flex-wrap: wrap; gap: 0 8px; padding: 4px 16px; }
+  .booth-logo { flex: 1 1 auto; }
+  .booth-header-tools { order: 2; }
+  .booth-header .steps { order: 3; flex: 0 0 100%; flex-wrap: nowrap; gap: 8px; padding: 2px 0 6px; }
+  .booth-header .steps li:not([aria-current="step"]) { font-size: 0; gap: 0; }
+  .booth-header .steps li[aria-current="step"] { font-size: 14px; }
+}
 
 .booth-menu { position: relative; }
 .booth-menu-panel {
