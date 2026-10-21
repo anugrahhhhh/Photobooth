@@ -97,6 +97,8 @@ function initMenu() {
   });
   bindThemeToggle($('#theme-toggle'));
   bindLangSelect($('#lang-select'));
+  bindThemeToggle($('#welcome-theme'));
+  bindLangSelect($('#welcome-lang'));
 }
 
 async function start() {
@@ -114,10 +116,14 @@ async function start() {
   initMenu();
   applyI18n(document);
 
-  const settings = { ...DEFAULT_SETTINGS, ...(await getJSON('/api/settings').catch(() => ({}))) };
-  const ctx = createCtx(settings);
+  // Layar dipasang dulu dengan cadangan; pengaturan server menyusul di tempat yang sama.
+  const ctx = createCtx({ ...DEFAULT_SETTINGS });
   for (const screen of Object.values(SCREENS)) screen.init(ctx);
   ctx.go('welcome');
+  Object.assign(ctx.settings, await getJSON('/api/settings').catch(() => ({})));
 }
 
-start();
+start().catch((err) => {
+  console.error(err);
+  document.querySelector('[data-screen="welcome"]').hidden = false;
+});

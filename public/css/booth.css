@@ -60,3 +60,6 @@
 .template-card small { color: var(--muted); font-weight: 600; }
 .template-card:disabled { opacity: .6; cursor: progress; }
 .template-card[aria-busy="true"] { opacity: 1; outline: 3px solid var(--accent); }
+
+.welcome-tools { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 20px; }
+.welcome-tools .input { width: auto; }

@@ -2,7 +2,7 @@ import { $, el } from '../dom.js';
 import { t, onLangChange } from '../../i18n.js';
 import { getJSON } from '../../api.js';
 import { loadTemplateImage } from '../../strip.js';
-import { changeTemplate, resetAll, wouldDrop, nextEmptySlot, latestOnly } from '../../state.js';
+import { changeTemplate, wouldDrop, nextEmptySlot, latestOnly } from '../../state.js';
 import { slotCountChips, filterBySlots } from '../models.js';
 
 const picking = latestOnly();
@@ -109,13 +109,15 @@ async function pickTemplate(tpl) {
   try {
     const img = await loadTemplateImage(tpl.image_url);
     if (!picking.isCurrent(token) || ctx.visit() !== visit) return; // sudah ditinggalkan
-    const { state, session } = ctx;
-    if (session.pickMode === 'change') {
+    const { state } = ctx;
+    if (ctx.session.pickMode === 'change') {
       const n = wouldDrop(state, tpl);
       if (n > 0 && !confirm(t('booth.pick.confirmDrop', { slots: tpl.slots.length, n }))) return;
     } else {
-      resetAll(state);
+      ctx.resetSession();
+      ctx.session.pickMode = 'start';
     }
+    const { session } = ctx;
     session.templateImg = img;
     session.target = null;
     changeTemplate(state, tpl);
