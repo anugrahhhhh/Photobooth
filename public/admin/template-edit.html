@@ -1,46 +1,47 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-skin="clean">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Editor Template — Photobooth</title>
-    <link rel="stylesheet" href="/css/app.css" />
+    <script src="/js/theme-boot.js"></script>
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/admin.css" />
     <script type="module" src="/admin/admin.js"></script>
   </head>
   <body data-page="edit">
-    <main class="admin">
-      <header class="admin-header">
+    <main id="content">
+      <header class="page-head">
         <h1 id="title">Template baru</h1>
-        <nav>
-          <a class="button" href="/admin/dashboard.html">← Dashboard</a>
-        </nav>
+        <a class="btn" href="/admin/templates.html">← Template</a>
       </header>
 
       <div class="editor">
         <form id="editor" class="card editor-form" novalidate>
-          <label>
-            File PNG template (bagian slot harus transparan)
-            <input name="image" type="file" accept="image/png" />
-          </label>
-          <div class="row">
-            <label>
-              Lebar kanvas (px)
-              <input name="canvas_w" readonly tabindex="-1" />
-            </label>
-            <label>
-              Tinggi kanvas (px)
-              <input name="canvas_h" readonly tabindex="-1" />
-            </label>
+          <div class="field">
+            <label for="image">File PNG template (bagian slot harus transparan)</label>
+            <input id="image" class="input" name="image" type="file" accept="image/png" />
           </div>
           <div class="row">
-            <label>
-              Nama
-              <input name="name" maxlength="100" required />
-            </label>
-            <label>
-              Warna latar
-              <input name="bg_color" type="color" value="#ffffff" />
-            </label>
+            <div class="field">
+              <label for="canvas_w">Lebar kanvas (px)</label>
+              <input id="canvas_w" class="input" name="canvas_w" readonly tabindex="-1" />
+            </div>
+            <div class="field">
+              <label for="canvas_h">Tinggi kanvas (px)</label>
+              <input id="canvas_h" class="input" name="canvas_h" readonly tabindex="-1" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="name">Nama</label>
+              <input id="name" class="input" name="name" maxlength="100" required />
+            </div>
+            <div class="field">
+              <label for="bg_color">Warna latar</label>
+              <input id="bg_color" class="input color" name="bg_color" type="color" value="#ffffff" />
+            </div>
           </div>
 
           <fieldset class="slots">
@@ -50,8 +51,8 @@
             </div>
             <div id="slot-list"></div>
             <div class="row">
-              <button type="button" id="add-slot" class="small">+ Tambah slot</button>
-              <button type="button" id="detect-slots" class="small">Deteksi slot otomatis</button>
+              <button type="button" id="add-slot" class="btn btn-sm">+ Tambah slot</button>
+              <button type="button" id="detect-slots" class="btn btn-sm">Deteksi slot otomatis</button>
             </div>
             <p id="detect-status" class="status-msg" role="status"></p>
           </fieldset>
@@ -59,8 +60,8 @@
           <ul id="messages" class="messages" aria-live="polite"></ul>
 
           <div class="row">
-            <button type="submit" id="save" class="primary" disabled>Simpan</button>
-            <button type="button" id="activate" disabled>Aktifkan</button>
+            <button type="submit" id="save" class="btn btn-primary" disabled>Simpan</button>
+            <button type="button" id="activate" class="btn" disabled>Aktifkan</button>
           </div>
           <p id="status" class="status-msg" role="status"></p>
         </form>

@@ -1,21 +1,20 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-skin="clean">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard — Photobooth</title>
-    <link rel="stylesheet" href="/css/app.css" />
+    <script src="/js/theme-boot.js"></script>
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/admin.css" />
     <script type="module" src="/admin/admin.js"></script>
   </head>
   <body data-page="dashboard">
-    <main class="admin">
-      <header class="admin-header">
+    <main id="content">
+      <header class="page-head">
         <h1>Dashboard</h1>
-        <nav>
-          <a class="button primary" href="/admin/template-edit.html">+ Template baru</a>
-          <a class="button" href="/" target="_blank" rel="noopener">Buka booth</a>
-          <button type="button" id="logout">Keluar</button>
-        </nav>
+        <a class="btn btn-primary" href="/admin/template-edit.html">+ Template baru</a>
       </header>
 
       <p id="status" class="status-msg" role="status"></p>
@@ -64,15 +63,15 @@
       <section class="card section">
         <h2>Pengaturan</h2>
         <form id="settings-form" class="settings-form">
-          <label>
-            Hitung mundur (detik)
-            <input name="countdown_seconds" type="number" min="1" max="10" step="1" required />
-          </label>
+          <div class="field">
+            <label for="countdown_seconds">Hitung mundur (detik)</label>
+            <input id="countdown_seconds" class="input" name="countdown_seconds" type="number" min="1" max="10" step="1" required />
+          </div>
           <label class="check">
-            <input name="mirror_output" type="checkbox" />
+            <input name="mirror_output" type="checkbox" class="switch" role="switch" />
             Cerminkan hasil foto kamera depan
           </label>
-          <button type="submit" class="primary">Simpan pengaturan</button>
+          <button type="submit" class="btn btn-primary">Simpan pengaturan</button>
         </form>
         <p id="settings-status" class="status-msg" role="status"></p>
       </section>
