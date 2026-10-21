@@ -28,7 +28,7 @@ npm run dev        # atau: npm start
 npm test
 ```
 
-Admin: `http://localhost:3000/admin`.
+Landing: `http://localhost:3000/`. Booth: `http://localhost:3000/booth`. Admin: `http://localhost:3000/admin`.
 
 ## Seed
 

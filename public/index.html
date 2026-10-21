@@ -1,132 +1,78 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-skin="fun">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#d6336c" />
+    <meta name="theme-color" content="#FF5A4E" />
     <title>Photobooth</title>
-    <link rel="stylesheet" href="/css/app.css" />
-    <script type="module" src="/js/app.js"></script>
+    <script src="/js/theme-boot.js"></script>
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/landing.css" />
+    <script type="module" src="/js/landing.js"></script>
   </head>
-  <body class="booth-app">
-    <header class="topbar">
-      <ol class="progress" id="progress" aria-label="Langkah">
-        <li data-step="pick">Template</li>
-        <li data-step="booth">Foto</li>
-        <li data-step="adjust">Atur</li>
-        <li data-step="result">Unduh</li>
-      </ol>
-    </header>
-
-    <!-- Beranda -->
-    <section class="screen" id="screen-home">
-      <div class="inapp-banner card" id="inapp-banner" hidden>
-        <p><strong>Buka di Chrome atau Safari</strong> agar kamera dan unduhan berjalan lancar.</p>
-        <div class="row">
-          <input id="inapp-link" readonly aria-label="Link halaman ini" />
-          <button type="button" id="inapp-copy" class="small">Salin link</button>
-          <button type="button" id="inapp-close" class="small">Tutup</button>
-        </div>
+  <body data-page="landing">
+    <nav class="card nav" id="nav" aria-label="Navigasi utama" data-i18n-attr="aria-label:landing.nav.label">
+      <a class="nav-brand" href="/"><span class="logo" aria-hidden="true"></span><span id="nav-name">Photobooth</span></a>
+      <div class="nav-links">
+        <a class="nav-link" href="#how" data-i18n="landing.nav.how">Cara kerja</a>
+        <a class="nav-link" id="nav-templates" href="#templates" data-i18n="landing.nav.templates" hidden>Template</a>
       </div>
-      <div class="hero">
-        <h1>Photobooth</h1>
-        <p>Pilih bingkai, berpose, lalu unduh photostrip-mu.</p>
-        <button type="button" class="primary big" id="start">Mulai</button>
+      <div class="nav-tools">
+        <label class="visually-hidden" for="lang-select" data-i18n="common.language">Bahasa</label>
+        <select id="lang-select" class="input">
+          <option value="id">ID</option>
+          <option value="en">EN</option>
+        </select>
+        <button type="button" class="btn btn-icon" id="theme-toggle"></button>
+        <a class="btn btn-primary nav-start" href="/booth" data-i18n="landing.start">Mulai Foto</a>
       </div>
-    </section>
+    </nav>
 
-    <!-- Pilih template -->
-    <section class="screen" id="screen-pick" hidden>
-      <div class="screen-head">
-        <h2 id="pick-title">Pilih template</h2>
-        <button type="button" id="pick-back" class="small" hidden>Kembali</button>
-      </div>
-      <p class="status-msg" id="pick-status" role="status"></p>
-      <button type="button" id="pick-retry" hidden>Coba lagi</button>
-      <div class="template-grid" id="template-grid"></div>
-    </section>
-
-    <!-- Booth -->
-    <section class="screen" id="screen-booth" hidden>
-      <div class="booth">
-        <div class="viewfinder" id="viewfinder">
-          <video id="video" playsinline muted autoplay></video>
-          <div class="countdown" id="countdown" hidden aria-live="assertive"></div>
-          <div class="flash" id="flash"></div>
-          <div class="camera-error card" id="camera-error" hidden>
-            <p id="camera-error-msg"></p>
-            <div class="row">
-              <button type="button" id="camera-retry" class="small">Coba lagi</button>
-              <label class="button small primary gallery-button">
-                Pilih dari galeri
-                <input type="file" accept="image/*" multiple class="gallery-input" />
-              </label>
-            </div>
+    <main>
+      <section class="hero" id="hero">
+        <div class="hero-copy">
+          <h1 class="display hero-title"><span data-i18n="landing.hero.title1">Abadikan</span><br /><span class="accent" data-i18n="landing.hero.title2">Momen Seru!</span></h1>
+          <p class="lead" data-i18n="landing.hero.lead">Photobooth digital langsung dari browser. Pilih bingkai, berpose, dan bawa pulang photostrip-mu, tanpa aplikasi.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary btn-lg" href="/booth" data-i18n="landing.start">Mulai Foto</a>
+            <a class="btn btn-secondary btn-lg" id="hero-templates" href="#templates" data-i18n="landing.hero.seeTemplates" hidden>Lihat template</a>
           </div>
         </div>
-        <p class="slot-label" id="slot-label"></p>
-        <div class="booth-controls">
-          <button type="button" class="primary big" id="shoot">Ambil foto</button>
-          <button type="button" class="big danger" id="cancel" hidden>Batal</button>
+        <div class="collage" aria-hidden="true">
+          <div class="strip strip-1"><b></b><b></b><b></b></div>
+          <div class="strip strip-2"><b></b><b></b></div>
+          <div class="strip strip-3"><b></b><b></b><b></b></div>
+          <span class="star star-1">&#10022;</span>
+          <span class="star star-2">&#10022;</span>
+          <span class="star star-3">&#10022;</span>
         </div>
-        <div class="booth-tools">
-          <button type="button" id="flip" class="small" hidden>Balik kamera</button>
-          <select id="camera-select" hidden aria-label="Pilih kamera"></select>
-          <button type="button" id="fullscreen" class="small" hidden>Layar penuh</button>
-          <label class="button small gallery-button">
-            Unggah dari galeri
-            <input type="file" accept="image/*" multiple class="gallery-input" />
-          </label>
-          <button type="button" id="booth-to-adjust" class="small" hidden>Selesai</button>
-        </div>
-        <ul class="messages" id="gallery-errors"></ul>
-      </div>
-    </section>
+      </section>
 
-    <!-- Atur -->
-    <section class="screen" id="screen-adjust" hidden>
-      <div class="adjust">
-        <div class="adjust-stage" id="adjust-stage">
-          <canvas id="adjust-canvas" aria-label="Pratinjau photostrip. Ketuk slot untuk memilih, geser untuk mengatur posisi."></canvas>
-        </div>
-        <div class="adjust-panel">
-          <p class="hint" id="adjust-hint">Ketuk foto untuk memilih, geser untuk mengatur, cubit untuk zoom.</p>
-          <div class="zoom-row">
-            <button type="button" id="zoom-out" class="small" aria-label="Perkecil">−</button>
-            <input type="range" id="zoom" min="1" max="3" step="0.01" value="1" aria-label="Zoom" />
-            <button type="button" id="zoom-in" class="small" aria-label="Perbesar">+</button>
-          </div>
-          <div class="filters" id="filters" role="radiogroup" aria-label="Filter"></div>
-          <div class="row">
-            <button type="button" id="retake" class="small">Ulang foto ini</button>
-            <button type="button" id="change-template" class="small">Ganti template</button>
-          </div>
-          <button type="button" class="primary big" id="to-result">Lanjut</button>
-        </div>
-      </div>
-    </section>
+      <section class="band" id="how">
+        <h2 class="display" data-i18n="landing.how.title">Cara Kerjanya</h2>
+        <ol class="how-steps">
+          <li class="card"><span class="how-n">1</span><b data-i18n="landing.how.1.title">Pilih bingkai</b><span data-i18n="landing.how.1.body">Bingkai yang pas untuk acaramu.</span></li>
+          <li class="card"><span class="how-n">2</span><b data-i18n="landing.how.2.title">Berpose</b><span data-i18n="landing.how.2.body">Kamera atau unggah dari galeri.</span></li>
+          <li class="card"><span class="how-n">3</span><b data-i18n="landing.how.3.title">Atur</b><span data-i18n="landing.how.3.body">Geser, zoom, dan beri filter.</span></li>
+          <li class="card"><span class="how-n">4</span><b data-i18n="landing.how.4.title">Unduh</b><span data-i18n="landing.how.4.body">Photostrip siap dibagikan.</span></li>
+        </ol>
+      </section>
 
-    <!-- Hasil -->
-    <section class="screen" id="screen-result" hidden>
-      <div class="result">
-        <img id="result-img" alt="Hasil photostrip" />
-        <div class="result-actions">
-          <button type="button" class="primary big" id="download" disabled>Menyiapkan...</button>
-          <div class="row">
-            <button type="button" id="back-to-adjust" class="small">Atur lagi</button>
-            <button type="button" id="restart" class="small">Ulang sesi</button>
-            <button type="button" id="new-session" class="small">Sesi baru</button>
-          </div>
-          <p class="status-msg" id="result-status" role="status"></p>
-        </div>
-      </div>
-    </section>
+      <section class="templates" id="templates" hidden>
+        <h2 class="display" data-i18n="landing.templates.title">Contoh Template</h2>
+        <ul class="template-row" id="template-row"></ul>
+      </section>
 
-    <!-- Cadangan iOS lama: tekan lama untuk menyimpan -->
-    <div class="save-overlay" id="save-overlay" hidden>
-      <p>Tekan lama gambar lalu pilih <strong>Simpan</strong>.</p>
-      <img id="save-overlay-img" alt="Photostrip untuk disimpan" />
-      <button type="button" id="save-overlay-close" class="big">Tutup</button>
-    </div>
+      <section class="final-cta" id="cta">
+        <h2 class="display" data-i18n="landing.cta.title">Siap berfoto?</h2>
+        <a class="btn btn-primary btn-lg" href="/booth" data-i18n="landing.start">Mulai Foto</a>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span><span id="footer-name">Photobooth</span> &copy; <span id="footer-year"></span></span>
+      <a href="/admin" data-i18n="landing.footer.staff">Masuk petugas</a>
+    </footer>
   </body>
 </html>

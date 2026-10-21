@@ -2,8 +2,8 @@ import { $, $$ } from './dom.js';
 import { getJSON } from '../api.js';
 import { PRODUCT_NAME } from '../brand.js';
 import { KEYS, read } from '../storage.js';
-import { initTheme, bindThemeToggle } from '../theme.js';
-import { applyI18n, bindLangSelect, initialLang, setLang } from '../i18n.js';
+import { initTheme, bindThemeToggle, refreshThemeToggles } from '../theme.js';
+import { applyI18n, bindLangSelect, initialLang, onLangChange, setLang, t } from '../i18n.js';
 import { createState, resetAll } from '../state.js';
 import { createWakeLock } from '../wake-lock.js';
 import { createResultStore } from './result-store.js';
@@ -95,9 +95,11 @@ function initMenu() {
   document.addEventListener('click', (e) => {
     if (!panel.hidden && !$('#booth-menu').contains(e.target)) setOpen(false);
   });
-  bindThemeToggle($('#theme-toggle'));
+  const label = (p) => t(`common.theme.${p}`);
+  bindThemeToggle($('#theme-toggle'), { label });
   bindLangSelect($('#lang-select'));
-  bindThemeToggle($('#welcome-theme'));
+  bindThemeToggle($('#welcome-theme'), { label });
+  onLangChange(refreshThemeToggles);
   bindLangSelect($('#welcome-lang'));
 }
 

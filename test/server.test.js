@@ -109,3 +109,12 @@ test('GET /booth → 200 html dengan semua layar dan main.js', async () => {
   assert.match(res.text, /data-screen="shoot"/);
   assert.match(res.text, /\/js\/booth\/main\.js/);
 });
+
+test('GET / → landing page, tanpa app.js v1', async () => {
+  const res = await request(app).get('/');
+  assert.equal(res.status, 200);
+  assert.match(res.headers['content-type'], /text\/html/);
+  assert.match(res.text, /data-page="landing"/);
+  assert.match(res.text, /href="\/booth"/);
+  assert.doesNotMatch(res.text, /\/js\/app\.js/);
+});

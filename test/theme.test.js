@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import vm from 'node:vm';
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
-import { THEME_PREFS, readThemePref, nextThemePref, resolveTheme } from '../public/js/theme.js';
+import { THEME_PREFS, readThemePref, nextThemePref, resolveTheme, defaultThemeLabel } from '../public/js/theme.js';
 import { PRODUCT_NAME } from '../public/js/brand.js';
 
 test('PRODUCT_NAME', () => assert.equal(PRODUCT_NAME, 'Photobooth'));
@@ -47,4 +47,10 @@ test('theme-boot: pilihan dan sistem', () => {
   assert.equal(runBoot({ pref: 'dark', dark: false }), 'dark');
   assert.equal(runBoot({ pref: 'ungu', dark: true }), 'dark');
   assert.equal(runBoot({ pref: null, dark: false }), 'light');
+});
+
+test('defaultThemeLabel: label Indonesia bawaan untuk halaman admin', () => {
+  assert.equal(defaultThemeLabel('system'), 'Tema: ikuti sistem');
+  assert.equal(defaultThemeLabel('light'), 'Tema: terang');
+  assert.equal(defaultThemeLabel('dark'), 'Tema: gelap');
 });

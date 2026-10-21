@@ -1,0 +1,78 @@
+/* Landing. Spec 3.1. Warna dan bentuk dari tokens.css, tanpa gambar. */
+main { overflow-x: clip; }
+
+.nav {
+  position: sticky; top: 12px; z-index: 20;
+  margin: 12px; padding: 8px 12px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.nav-brand { display: flex; align-items: center; gap: 10px; font: 800 18px/1 var(--font-display); color: var(--text); text-decoration: none; }
+.logo { width: 28px; height: 28px; border-radius: 8px; background: var(--primary); border: var(--outline); }
+.nav-links { display: flex; gap: 4px; margin-left: auto; }
+.nav-link { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 10px; font-weight: 700; color: var(--text); text-decoration: none; }
+.nav-link:hover { text-decoration: underline; }
+.nav-tools { display: flex; align-items: center; gap: 8px; }
+.nav-tools > * { flex: none; }
+.nav-tools .input { width: auto; }
+.nav-start { white-space: nowrap; }
+.nav-link[hidden], .btn[hidden] { display: none; }
+
+.hero {
+  display: grid; grid-template-columns: 1.1fr .9fr; gap: 24px; align-items: center;
+  max-width: 1140px; margin: 0 auto; padding: 32px 20px 48px;
+}
+.hero-title { font-size: clamp(40px, 6.5vw, 72px); }
+.lead { max-width: 40ch; color: var(--muted); font-size: 18px; margin: 0 0 24px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.collage { position: relative; height: 320px; }
+.strip {
+  position: absolute; width: 130px; padding: 10px; display: grid; gap: 8px;
+  background: #FFB4AD; border: var(--outline); border-radius: 10px; box-shadow: var(--shadow-lg);
+}
+.strip b { height: 72px; border-radius: 6px; border: var(--outline); background: linear-gradient(160deg, #9CA3AF, #4B5563); }
+.strip-1 { left: 4%; top: 30px; transform: rotate(-8deg); }
+.strip-2 { left: 36%; top: 0; transform: rotate(4deg); background: #C9F2EC; }
+.strip-3 { left: 66%; top: 40px; transform: rotate(10deg); background: #FFEEB8; }
+.star { position: absolute; font-size: 32px; color: var(--sun); text-shadow: 2px 2px 0 var(--line); }
+.star-1 { left: 2%; bottom: 20px; }
+.star-2 { right: 4%; bottom: 0; font-size: 24px; }
+.star-3 { left: 52%; bottom: 10px; font-size: 20px; color: var(--primary); }
+
+.band { background: var(--accent); border-block: 3px solid var(--line); padding: 32px 20px; }
+.band > *, .templates > *, .final-cta > * { max-width: 1100px; margin-inline: auto; }
+.how-steps { list-style: none; margin: 0 auto; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.how-steps li { display: flex; flex-direction: column; gap: 6px; padding: 16px; color: var(--text); }
+.how-n {
+  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--sun); border: var(--outline); font-weight: 800; color: #16161A;
+}
+
+.templates { padding: 32px 20px; }
+.templates[hidden] { display: none; }
+.template-row { list-style: none; margin: 0 auto; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+.template-card { padding: 8px; display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 14px; text-align: center; }
+.template-card img { width: 100%; aspect-ratio: 3 / 4; object-fit: contain; background: var(--primary-soft); border-radius: 6px; }
+
+.final-cta { background: var(--sun); border-top: 3px solid var(--line); padding: 40px 20px; text-align: center; }
+
+.footer {
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  padding: 16px 20px; background: var(--surface); border-top: 3px solid var(--line);
+  color: var(--muted); font-size: 14px;
+}
+.footer a { color: var(--text); display: inline-flex; align-items: center; min-height: var(--tap); font-weight: 700; }
+
+@media (max-width: 820px) {
+  .hero { grid-template-columns: 1fr; }
+  .collage { height: 260px; }
+  .strip { width: 100px; padding: 8px; }
+  .strip b { height: 54px; }
+  .how-steps { grid-template-columns: repeat(2, 1fr); }
+  .template-row { grid-template-columns: repeat(2, 1fr); }
+  .nav-links { margin-left: 0; }
+}
+@media (max-width: 520px) {
+  .nav { position: static; }
+  .nav-tools { margin-left: auto; }
+}
