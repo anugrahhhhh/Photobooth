@@ -195,3 +195,25 @@
 .filter-thumb:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
 .filter-thumb[aria-checked="true"]:focus-visible { outline-color: var(--accent); }
 @media (min-width: 800px) { .filter-list { flex-wrap: wrap; overflow-x: visible; } }
+
+/* Pintu petugas, dialog PIN, dan menu petugas */
+.booth-logo, .kiosk-corner { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.kiosk-corner { position: fixed; top: 0; right: 0; z-index: 900; width: 64px; height: 64px; }
+.kiosk-ring {
+  position: fixed;
+  z-index: 1100;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  pointer-events: none;
+  transform: rotate(-90deg);
+}
+.kiosk-ring circle { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; }
+.pin-dialog, .staff-menu { width: min(92vw, 360px); }
+.pin-input { width: 100%; margin: 12px 0 4px; font-size: 28px; text-align: center; letter-spacing: .4em; }
+.pin-error { min-height: 1.5em; margin: 0 0 8px; text-align: center; }
+.pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+.pin-keypad .btn { min-height: 60px; font-size: 22px; font-weight: 700; }
+.pin-dialog > .btn { width: 100%; }
+.staff-list { display: grid; gap: 12px; margin-top: 12px; }
+.staff-list .btn-lg { width: 100%; }

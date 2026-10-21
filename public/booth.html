@@ -42,6 +42,39 @@
       </div>
     </header>
 
+    <div class="kiosk-corner" id="kiosk-corner" hidden></div>
+
+    <dialog class="dialog pin-dialog" id="pin-dialog" aria-labelledby="pin-title">
+      <h2 class="display" id="pin-title" data-i18n="kiosk.pin.title">PIN petugas</h2>
+      <input class="input pin-input" id="pin-input" type="password" inputmode="numeric" autocomplete="off" maxlength="8" readonly aria-label="PIN" data-i18n-attr="aria-label:kiosk.pin.label" />
+      <p class="status-msg pin-error" id="pin-error" role="alert"></p>
+      <div class="pin-keypad" id="pin-keypad"></div>
+      <button type="button" class="btn" id="pin-cancel" data-i18n="kiosk.pin.cancel">Batal</button>
+    </dialog>
+
+    <dialog class="dialog staff-menu" id="staff-menu" aria-labelledby="staff-title">
+      <h2 class="display" id="staff-title" data-i18n="kiosk.menu.title">Menu petugas</h2>
+      <div class="staff-list">
+        <button type="button" class="btn btn-primary btn-lg" id="staff-kiosk"></button>
+        <button type="button" class="btn btn-lg" id="staff-fullscreen" data-i18n="booth.shoot.fullscreen">Layar penuh</button>
+        <button type="button" class="btn btn-lg" id="staff-sound"></button>
+        <div class="menu-row">
+          <label for="staff-lang" data-i18n="kiosk.menu.lang">Bahasa default perangkat</label>
+          <select id="staff-lang" class="input">
+            <option value="id">Indonesia</option>
+            <option value="en">English</option>
+            <option value="" data-i18n="kiosk.menu.lang.browser">Ikuti browser</option>
+          </select>
+        </div>
+        <div class="menu-row">
+          <span data-i18n="common.theme">Tema</span>
+          <button type="button" class="btn btn-icon" id="staff-theme"></button>
+        </div>
+        <button type="button" class="btn btn-lg" id="staff-reload" data-i18n="kiosk.menu.reload">Muat ulang</button>
+        <button type="button" class="btn" id="staff-close" data-i18n="common.close">Tutup</button>
+      </div>
+    </dialog>
+
     <main class="booth-main">
       <section data-screen="welcome">
         <div class="inapp-banner card" id="inapp-banner" hidden>

@@ -6,6 +6,7 @@ import { initTheme, bindThemeToggle, refreshThemeToggles } from '../theme.js';
 import { applyI18n, bindLangSelect, initialLang, onLangChange, setLang, t } from '../i18n.js';
 import { createState, resetAll } from '../state.js';
 import { initSound, isEnabled, setEnabled, unlock } from '../sound.js';
+import { initKiosk, isKioskOn } from '../kiosk.js';
 import { createWakeLock } from '../wake-lock.js';
 import { createResultStore } from './result-store.js';
 import * as welcome from './screens/welcome.js';
@@ -33,6 +34,7 @@ function createCtx(settings) {
   state.settings = settings;
   let current = null;
   let visits = 0;
+  let kioskOn = isKioskOn();
   const resetHooks = [];
   const photoHooks = [];
 
@@ -42,6 +44,7 @@ function createCtx(settings) {
     settings,
     result: createResultStore(),
     wakeLock: createWakeLock(),
+    kiosk: () => kioskOn,
     screen: () => current,
     visit: () => visits,
     onReset: (cb) => resetHooks.push(cb),
@@ -64,6 +67,7 @@ function createCtx(settings) {
       SCREENS[name].enter(ctx, params);
     },
   };
+  ctx.setKioskOn = (on) => (kioskOn = on);
   return ctx;
 }
 
@@ -141,6 +145,8 @@ async function start() {
   const ctx = createCtx({ ...DEFAULT_SETTINGS });
   initSound(ctx.settings);
   const syncSound = bindSoundToggle();
+  // Penguncian layar saat kiosk menyala menyusul di Tahap 5.3 lewat onChange ini.
+  initKiosk(ctx, { onChange: (on) => ctx.setKioskOn(on) });
   for (const screen of Object.values(SCREENS)) screen.init(ctx);
   ctx.go('welcome');
   Object.assign(ctx.settings, await getJSON('/api/settings').catch(() => ({})));
