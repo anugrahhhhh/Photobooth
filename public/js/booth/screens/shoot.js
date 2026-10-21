@@ -196,7 +196,7 @@ async function runSequence() {
         ctx.go('review', { slot, target });
         return;
       }
-      if (ctx.session.target != null) break;
+      ctx.session.target = null; // setelah ulang, lanjut hanya bila masih ada slot kosong
       if (nextEmptySlot(ctx.state) >= 0) await sleep(NEXT_SHOT_DELAY_MS);
     }
     if (token.cancelled) return;

@@ -10,7 +10,6 @@ let ctxRef = null;
 let timer = null;
 let raf = 0;
 let slotNow = -1;
-let targetNow = null;
 
 function stop() {
   timer?.cancel();
@@ -22,11 +21,12 @@ function stop() {
 function advance() {
   stop();
   const ctx = ctxRef;
-  if (targetNow != null || nextEmptySlot(ctx.state) < 0) {
+  // Lanjut diputuskan oleh slot kosong yang tersisa, bukan oleh target ulang.
+  if (nextEmptySlot(ctx.state) >= 0) {
+    ctx.go('shoot', { auto: true });
+  } else {
     ctx.session.target = null;
     ctx.go('adjust');
-  } else {
-    ctx.go('shoot', { auto: true });
   }
 }
 
@@ -49,10 +49,9 @@ export function init(ctx) {
   $('#review-retake').addEventListener('click', retake);
 }
 
-export function enter(ctx, { slot = 0, target = null } = {}) {
+export function enter(ctx, { slot = 0 } = {}) {
   ctx.idle?.pause();
   slotNow = slot;
-  targetNow = target;
   const { state } = ctx;
   const src = state.photos[slot];
   const canvas = $('#review-photo');
