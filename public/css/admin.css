@@ -99,8 +99,8 @@ td.num { font-variant-numeric: tabular-nums; }
 .badge.active { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--text); border-color: var(--accent); }
 .badge.archived { text-decoration: line-through; }
 
-/* Tabel template: di bawah 768px setiap baris menjadi kartu */
-@media (max-width: 767px) {
+/* Tabel template: di bawah 1024px (sidebar sudah makan lebar) setiap baris menjadi kartu */
+@media (max-width: 1023px) {
   .table-wrap table, .table-wrap tbody { display: block; }
   .table-wrap thead { display: none; }
   .table-wrap tbody tr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
