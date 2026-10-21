@@ -26,6 +26,18 @@ export default {
   'camera.error.generic': 'Kamera tidak bisa dinyalakan. Coba muat ulang halaman atau pakai foto dari galeri.',
 
   'booth.shoot.cameraN': 'Kamera {n}',
+  'booth.shoot.photoOf': 'Foto {i} dari {n}',
+  'booth.shoot.retakeOf': 'Ulang foto {i} dari {n}',
+  'booth.shoot.take': 'Ambil foto',
+  'booth.shoot.cancel': 'Batal',
+  'booth.shoot.flip': 'Balik kamera',
+  'booth.shoot.fullscreen': 'Layar penuh',
+  'booth.shoot.gallery': 'Unggah dari galeri',
+  'booth.shoot.galleryPick': 'Pilih dari galeri',
+  'booth.shoot.toAdjust': 'Selesai',
+  'booth.shoot.selectCamera': 'Pilih kamera',
+  'booth.shoot.cameraLost': 'Kamera terputus dan gagal dinyalakan ulang. Periksa kamera lalu tekan Coba lagi.',
+  'booth.shoot.galleryError': '{name} tidak bisa dibuka (format seperti HEIC mungkin tidak didukung).',
 
   'booth.steps.label': 'Langkah',
   'booth.steps.pick': 'Template',

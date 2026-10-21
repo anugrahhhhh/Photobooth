@@ -78,7 +78,44 @@
         <div class="template-grid" id="template-grid"></div>
       </section>
 
-      <section data-screen="shoot" hidden></section>
+      <section data-screen="shoot" hidden>
+        <div class="shoot">
+          <div class="viewfinder" id="viewfinder">
+            <video id="video" playsinline muted autoplay></video>
+            <div class="countdown" id="countdown" hidden aria-live="assertive"></div>
+            <div class="flash" id="flash"></div>
+            <div class="camera-error card" id="camera-error" hidden>
+              <p id="camera-error-msg" role="alert"></p>
+              <div class="row">
+                <button type="button" class="btn" id="camera-retry" data-i18n="common.retry">Coba lagi</button>
+                <label class="btn btn-primary gallery-button">
+                  <span data-i18n="booth.shoot.galleryPick">Pilih dari galeri</span>
+                  <input type="file" accept="image/*" multiple class="gallery-input" />
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="shoot-panel">
+            <ol class="shoot-dots" id="shoot-dots" aria-hidden="true"></ol>
+            <p class="shoot-label" id="slot-label" role="status"></p>
+            <div class="shoot-controls">
+              <button type="button" class="btn btn-primary btn-lg" id="shoot" data-i18n="booth.shoot.take">Ambil foto</button>
+              <button type="button" class="btn btn-danger btn-lg" id="cancel" data-i18n="booth.shoot.cancel" hidden>Batal</button>
+            </div>
+            <div class="shoot-tools">
+              <button type="button" class="btn" id="flip" data-i18n="booth.shoot.flip" hidden>Balik kamera</button>
+              <select class="input" id="camera-select" hidden aria-label="Pilih kamera" data-i18n-attr="aria-label:booth.shoot.selectCamera"></select>
+              <button type="button" class="btn" id="fullscreen" data-i18n="booth.shoot.fullscreen" hidden>Layar penuh</button>
+              <label class="btn btn-secondary gallery-button">
+                <span data-i18n="booth.shoot.gallery">Unggah dari galeri</span>
+                <input type="file" accept="image/*" multiple class="gallery-input" />
+              </label>
+              <button type="button" class="btn btn-primary" id="shoot-to-adjust" data-i18n="booth.shoot.toAdjust" hidden>Selesai</button>
+            </div>
+            <ul class="shoot-errors" id="gallery-errors"></ul>
+          </div>
+        </div>
+      </section>
       <section data-screen="review" hidden></section>
       <section data-screen="adjust" hidden></section>
       <section data-screen="result" hidden></section>

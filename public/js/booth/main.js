@@ -45,7 +45,7 @@ function createCtx(settings) {
     visit: () => visits,
     onReset: (cb) => resetHooks.push(cb),
     onPhotoChanged: (cb) => photoHooks.push(cb),
-    notifyPhotoChanged: (slot) => photoHooks.forEach((cb) => cb(slot)),
+    notifyPhotoChanged: (slot, oldCanvas) => photoHooks.forEach((cb) => cb(slot, oldCanvas)),
     resetSession() {
       resetAll(state);
       resetHooks.forEach((cb) => cb());

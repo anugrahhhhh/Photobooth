@@ -63,3 +63,56 @@
 
 .welcome-tools { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 20px; }
 .welcome-tools .input { width: auto; }
+
+/* Layar berpose */
+.shoot { display: grid; gap: 16px; justify-items: center; }
+.viewfinder {
+  position: relative;
+  width: min(100%, calc((100dvh - 300px) * var(--ratio, 0.75)));
+  aspect-ratio: var(--ratio, 0.75);
+  min-height: 160px;
+  background: #111;
+  border: var(--outline);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.viewfinder video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.viewfinder.mirror video { transform: scaleX(-1); }
+.countdown {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 800 clamp(5rem, 25vw, 12rem) / 1 var(--font-display);
+  color: #fff;
+  text-shadow: 0 4px 24px rgb(0 0 0 / 50%);
+  pointer-events: none;
+}
+.flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.flash.on { animation: shoot-flash 350ms ease-out; }
+@keyframes shoot-flash { from { opacity: 0.95; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .flash.on { animation-duration: 1ms; } }
+.camera-error { position: absolute; inset: 12px; overflow: auto; display: grid; align-content: center; gap: 12px; }
+.camera-error p { margin: 0; }
+
+.shoot-panel { display: grid; gap: 12px; justify-items: center; text-align: center; width: 100%; }
+.shoot-dots { display: flex; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.shoot-dot { width: 18px; height: 18px; border: var(--outline); border-radius: 5px; background: var(--surface); }
+.shoot-dot.done { background: var(--accent); }
+.shoot-dot.current { background: var(--sun); transform: scale(1.2); }
+.shoot-label { margin: 0; font-weight: 700; }
+.shoot-controls, .shoot-tools { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; }
+.shoot-tools .input { width: auto; max-width: 100%; }
+.shoot-errors { margin: 0; padding: 0; list-style: none; font-weight: 600; }
+.shoot-errors:empty { display: none; }
+.shoot-errors li::before { content: "\2715  "; color: var(--primary); }
+.gallery-button { position: relative; overflow: hidden; }
+.gallery-button:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.gallery-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.gallery-input:disabled { cursor: not-allowed; }
+
+@media (min-width: 901px) and (orientation: landscape) {
+  .shoot { grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); align-items: center; justify-items: stretch; }
+  .viewfinder { justify-self: end; width: min(100%, calc((100dvh - 140px) * var(--ratio, 0.75))); }
+  .shoot-panel { justify-self: start; align-content: center; }
+}

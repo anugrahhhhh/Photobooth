@@ -26,6 +26,18 @@ export default {
   'camera.error.generic': 'The camera could not be started. Try reloading the page or use a photo from your gallery.',
 
   'booth.shoot.cameraN': 'Camera {n}',
+  'booth.shoot.photoOf': 'Photo {i} of {n}',
+  'booth.shoot.retakeOf': 'Retake photo {i} of {n}',
+  'booth.shoot.take': 'Take photo',
+  'booth.shoot.cancel': 'Cancel',
+  'booth.shoot.flip': 'Flip camera',
+  'booth.shoot.fullscreen': 'Fullscreen',
+  'booth.shoot.gallery': 'Upload from gallery',
+  'booth.shoot.galleryPick': 'Choose from gallery',
+  'booth.shoot.toAdjust': 'Done',
+  'booth.shoot.selectCamera': 'Choose camera',
+  'booth.shoot.cameraLost': 'The camera disconnected and could not be restarted. Check the camera, then press Try again.',
+  'booth.shoot.galleryError': '{name} could not be opened (formats like HEIC may not be supported).',
 
   'booth.steps.label': 'Steps',
   'booth.steps.pick': 'Template',
