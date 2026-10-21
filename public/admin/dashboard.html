@@ -25,19 +25,31 @@
           <div class="label">Sesi hari ini</div>
         </div>
         <div class="card stat">
+          <div class="value" id="stat-7d">–</div>
+          <div class="label">Sesi 7 hari</div>
+        </div>
+        <div class="card stat">
           <div class="value" id="stat-active">–</div>
           <div class="label">Template aktif</div>
         </div>
         <div class="card stat">
-          <div class="value" id="stat-inactive">–</div>
-          <div class="label">Nonaktif · <span id="stat-archived">–</span> arsip</div>
-        </div>
-        <div class="card stat">
+          <div class="value value-text" id="stat-top-name">–</div>
           <div class="label">Terpopuler</div>
-          <ol id="stat-top"></ol>
-          <p id="stat-top-empty" class="label">Belum ada sesi</p>
         </div>
       </section>
+
+      <div class="dash-grid">
+        <section class="card section">
+          <h2>Sesi 14 hari terakhir</h2>
+          <div id="chart" class="chart-wrap"></div>
+        </section>
+
+        <section class="card section">
+          <h2>5 terpopuler</h2>
+          <ol id="top-list" class="top-list"></ol>
+          <p id="top-empty" class="status-msg" hidden>Belum ada sesi</p>
+        </section>
+      </div>
 
       <section class="card section">
         <h2>Template</h2>

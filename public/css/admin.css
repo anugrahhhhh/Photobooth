@@ -69,7 +69,19 @@ input[type="file"].input { padding: 8px 10px; }
 .stats { display: grid; gap: 14px; margin-top: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .stat .value { font-size: 28px; font-weight: 700; line-height: 1.2; }
 .stat .label { color: var(--muted); font-size: 13px; }
-.stat ol { margin: 6px 0 0; padding-left: 1.2em; font-size: 14px; }
+.stat .value-text { font-size: 20px; line-height: 1.5; overflow-wrap: anywhere; }
+.dash-grid { display: grid; gap: 14px; margin-top: 14px; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); align-items: start; }
+.dash-grid .section { margin-top: 0; }
+.chart-wrap { margin-top: 8px; }
+.chart { display: block; width: 100%; height: 160px; }
+.chart .bar { fill: color-mix(in srgb, var(--muted) 45%, var(--surface)); }
+.chart .bar.today { fill: var(--primary); }
+.top-list { margin: 8px 0 0; padding: 0; list-style: none; counter-reset: top; font-size: 14px; }
+.top-list li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); counter-increment: top; }
+.top-list li:last-child { border-bottom: 0; }
+.top-list li::before { content: counter(top) "."; color: var(--muted); min-width: 1.5em; }
+.top-list .top-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.top-list .num { color: var(--muted); font-variant-numeric: tabular-nums; }
 
 /* Tabel */
 .table-wrap { overflow-x: auto; }
@@ -125,7 +137,7 @@ label.check { display: flex; align-items: center; gap: 12px; }
 /* Di bawah 768px: sidebar menjadi bilah atas dengan menu lipat */
 @media (max-width: 767px) {
   .shell {
-    position: sticky; top: 0; inset: auto;
+    position: sticky; top: 0;
     width: auto; padding: 8px 16px;
     border-right: 0; border-bottom: 1px solid var(--border);
   }
@@ -136,6 +148,7 @@ label.check { display: flex; align-items: center; gap: 12px; }
   .shell-nav { display: none; padding: 8px 0 4px; }
   .shell-nav.open { display: flex; }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-grid { grid-template-columns: minmax(0, 1fr); }
   .slot-row { grid-template-columns: 1.5em repeat(4, minmax(0, 1fr)); }
   .slot-actions { grid-column: 2 / -1; }
 }

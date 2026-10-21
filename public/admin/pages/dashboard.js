@@ -1,4 +1,5 @@
 import { getJSON } from '../../js/api.js';
+import { renderBarChart } from '../chart.js';
 import { $, el, setStatus, adminApi, button, STATUS_LABEL } from '../common.js';
 
 export async function init() {
@@ -21,11 +22,14 @@ export async function init() {
 
 function renderStats(stats) {
   $('#stat-today').textContent = stats.sessions_today;
+  $('#stat-7d').textContent = stats.sessions_7d;
   $('#stat-active').textContent = stats.templates.active;
-  $('#stat-inactive').textContent = stats.templates.inactive;
-  $('#stat-archived').textContent = stats.templates.archived;
-  $('#stat-top').replaceChildren(...stats.top.map((t) => el('li', {}, `${t.name} (${t.count})`)));
-  $('#stat-top-empty').hidden = stats.top.length > 0;
+  $('#stat-top-name').textContent = stats.top[0]?.name ?? '–';
+  renderBarChart($('#chart'), stats.daily);
+  $('#top-list').replaceChildren(
+    ...stats.top.slice(0, 5).map((t) => el('li', {}, el('span', { className: 'top-name', textContent: t.name }), el('span', { className: 'num', textContent: `${t.count} sesi` }))),
+  );
+  $('#top-empty').hidden = stats.top.length > 0;
 }
 
 function renderTemplates(templates, refresh, status) {
