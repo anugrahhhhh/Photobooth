@@ -4,6 +4,7 @@ import { FILTERS, filteredCanvas } from '../../filters.js';
 import { clampTransform, clientToTemplate, hitSlot, previewScale, MIN_ZOOM, MAX_ZOOM } from '../../geometry.js';
 import { releaseCanvas } from '../../state.js';
 import { render } from '../../strip.js';
+import { createFilterThumbs } from '../filter-thumbs.js';
 
 const PREVIEW_FILTER_SIDE = 1024;
 
@@ -11,6 +12,7 @@ let ctxRef = null;
 let filteredCache = []; // salinan 1024 px per foto untuk filter aktif
 let previewScaleValue = 1;
 let frame = 0;
+const thumbs = createFilterThumbs();
 
 const onAdjust = () => ctxRef?.screen() === 'adjust';
 
@@ -84,12 +86,17 @@ function setZoom(ctx, z) {
   if (tr) updateTransform(ctx, i, { ...tr, zoom: Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z)) });
 }
 
+// Dibangun ulang hanya saat slot terpilih atau filter berubah, bukan tiap geser/zoom.
 function renderFilterButtons() {
-  const { state } = ctxRef;
+  const { state, session } = ctxRef;
+  const photo = state.photos[session.selected];
   $('#filters').replaceChildren(
     ...FILTERS.map((f) => {
-      const b = el('button', { type: 'button', className: 'chip', textContent: t(`filter.${f.id}`) });
-      b.setAttribute('aria-pressed', String(f.id === state.filter));
+      const b = el('button', { type: 'button', className: 'filter-thumb' });
+      b.setAttribute('role', 'radio');
+      b.setAttribute('aria-checked', String(f.id === state.filter));
+      if (photo) b.append(thumbs.get(photo, f.id));
+      b.append(el('span', { textContent: t(`filter.${f.id}`) }));
       b.addEventListener('click', () => {
         if (state.filter === f.id) return;
         state.filter = f.id;
@@ -127,6 +134,7 @@ function initGestures(ctx) {
       const hit = hitSlot(ctx.state.template.slots, toTemplate(e));
       if (hit >= 0 && hit !== selected()) {
         ctx.session.selected = hit;
+        renderFilterButtons();
         scheduleDraw();
       }
       gesture = hit >= 0 ? { type: 'pan', start: { x: e.clientX, y: e.clientY }, from: { ...transform() } } : null;
@@ -187,11 +195,15 @@ export function init(ctx) {
   $('#retake').addEventListener('click', () => ctx.go('shoot', { target: ctx.session.selected }));
   $('#change-template').addEventListener('click', () => ctx.go('pick', { mode: 'change' }));
   $('#to-result').addEventListener('click', () => ctx.go('result'));
-  ctx.onPhotoChanged((slot) => {
+  ctx.onPhotoChanged((slot, oldCanvas) => {
     releaseCanvas(filteredCache[slot]);
     filteredCache[slot] = undefined;
+    if (oldCanvas) thumbs.drop(oldCanvas);
   });
-  ctx.onReset(clearFilteredCache);
+  ctx.onReset(() => {
+    clearFilteredCache();
+    thumbs.clear();
+  });
   addEventListener('resize', () => onAdjust() && scheduleDraw());
   onLangChange(() => onAdjust() && renderFilterButtons());
 }
