@@ -13,6 +13,7 @@ import { authRouter } from './routes/auth.js';
 import { adminTemplatesRouter, publicTemplatesRouter } from './routes/templates.js';
 import { sessionsRouter, adminStatsRouter } from './routes/stats.js';
 import { publicSettingsRouter, adminSettingsRouter } from './routes/settings.js';
+import { kioskAdminRouter, kioskPublicRouter } from './routes/kiosk.js';
 import { requireAdmin } from './middleware/requireAdmin.js';
 import { checkOrigin } from './middleware/checkOrigin.js';
 
@@ -101,10 +102,12 @@ export function createApp({ config, db, storage, now = () => new Date(), extraRo
   app.use('/api/admin/templates', adminTemplatesRouter({ db, storage }));
   app.use('/api/admin/stats', adminStatsRouter({ db, tz: config.tz, now }));
   app.use('/api/admin/settings', adminSettingsRouter({ db }));
+  app.use('/api/admin/kiosk-pin', kioskAdminRouter({ db }));
 
   app.use('/api/templates', publicTemplatesRouter({ db, storage }));
   app.use('/api/sessions', sessionsRouter({ db }));
   app.use('/api/settings', publicSettingsRouter({ db }));
+  app.use('/api/kiosk', noStore, checkOrigin, kioskPublicRouter({ db }));
 
   extraRoutes?.(app);
 
