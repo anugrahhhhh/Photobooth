@@ -3,6 +3,7 @@ import { t } from '../../i18n.js';
 import * as camera from '../../camera.js';
 import { cameraErrorMessage, isFrontCamera, createRestartPolicy } from '../../camera.js';
 import { fitWithin } from '../../geometry.js';
+import { overlayLayout, applyOverlay } from '../overlay.js';
 import { nextEmptySlot, releaseCanvas } from '../../state.js';
 
 export const MAX_PHOTO_SIDE = 1920;
@@ -44,8 +45,7 @@ function updateView() {
   const slots = state.template.slots;
   const slot = currentSlot();
   if (slot >= 0) {
-    const s = slots[slot];
-    $('#viewfinder').style.setProperty('--ratio', String(s.w / s.h));
+    applyOverlay($('#viewfinder'), overlayLayout(state.template, slot), state.template);
     $('#slot-label').textContent = t(session.target != null ? 'booth.shoot.retakeOf' : 'booth.shoot.photoOf', {
       i: slot + 1,
       n: slots.length,
@@ -57,7 +57,7 @@ function updateView() {
       return el('li', { className: `shoot-dot ${cls}`.trim() });
     }),
   );
-  $('#viewfinder').classList.toggle('mirror', Boolean(cameraInfo) && frontCamera());
+  $('#video').classList.toggle('mirror', Boolean(cameraInfo) && frontCamera());
   syncControls();
 }
 

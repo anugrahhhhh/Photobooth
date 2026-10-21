@@ -81,8 +81,9 @@
       <section data-screen="shoot" hidden>
         <div class="shoot">
           <div class="viewfinder" id="viewfinder">
-            <video id="video" playsinline muted autoplay></video>
-            <div class="countdown" id="countdown" hidden aria-live="assertive"></div>
+            <div class="overlay-hole"><video id="video" playsinline muted autoplay></video></div>
+            <img class="overlay-frame" alt="" draggable="false">
+            <div class="countdown display" id="countdown" hidden aria-live="assertive"></div>
             <div class="flash" id="flash"></div>
             <div class="camera-error card" id="camera-error" hidden>
               <p id="camera-error-msg" role="alert"></p>
