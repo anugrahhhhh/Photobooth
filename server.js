@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import multer from 'multer';
 import { loadConfig } from './config.js';
 import { openDb } from './db/index.js';
+import { bootstrapAdmin } from './db/seed-admin.js';
 import { createStorage } from './storage/index.js';
 import { HttpError } from './lib/http-error.js';
 import { authRouter } from './routes/auth.js';
@@ -135,9 +136,10 @@ function classify(err) {
   return [500, 'Terjadi kesalahan pada server'];
 }
 
-function start() {
+async function start() {
   const config = loadConfig();
   const db = openDb(config.dbPath);
+  if ((await bootstrapAdmin(db)) === 'created') console.log(`Admin "${process.env.ADMIN_USERNAME}" dibuat dari env.`);
   const storage = createStorage(config.uploadDir);
   const app = createApp({ config, db, storage });
   const server = app.listen(config.port, () => console.log(`Photobooth berjalan di http://localhost:${config.port}`));
@@ -154,4 +156,9 @@ function start() {
   process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) start();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  start().catch((err) => {
+    console.error(err.message);
+    process.exit(1);
+  });
+}

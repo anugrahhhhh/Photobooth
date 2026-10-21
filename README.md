@@ -42,6 +42,31 @@ Landing: `http://localhost:3000/`. Booth: `http://localhost:3000/booth`. Admin: 
 
 ## Deploy
 
+### Railway (disarankan)
+
+`railway.json` sudah menyetel perintah start, health check `/healthz`, dan satu instance.
+
+1. Di [railway.com](https://railway.com): **New Project → Deploy from GitHub repo** → pilih repo ini dan cabang yang mau di-deploy.
+2. Buka service → **Settings → Volumes → Add Volume**, mount path `/data`.
+3. **Variables**:
+
+   | Variable | Nilai |
+   |---|---|
+   | `NODE_ENV` | `production` |
+   | `SESSION_SECRET` | string acak panjang (lihat perintah di bagian Env) |
+   | `DB_PATH` | `/data/photobooth.db` |
+   | `UPLOAD_DIR` | `/data/uploads` |
+   | `TZ` | `Asia/Jakarta` |
+   | `ADMIN_USERNAME` | nama admin pertama |
+   | `ADMIN_PASSWORD` | password admin pertama (minimal 8 karakter) |
+
+   `PORT` diisi Railway otomatis. `ADMIN_USERNAME`/`ADMIN_PASSWORD` hanya dipakai saat database belum punya user; setelah admin dibuat, keduanya boleh dihapus.
+4. **Settings → Networking → Generate Domain**. Alamat `https://….up.railway.app` langsung HTTPS, jadi kamera berfungsi.
+
+Setiap push ke cabang tersebut akan otomatis di-deploy ulang. Database dan template tersimpan di volume, jadi tidak hilang saat deploy.
+
+### Umum
+
 **Di balik reverse proxy** (nginx dan sejenisnya), di produksi server memakai `trust proxy` dan butuh header berikut. Tanpa header ini, login admin gagal: `checkOrigin` menolak dengan 403 atau cookie `secure` tidak terpasang.
 
 ```nginx
