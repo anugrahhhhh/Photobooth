@@ -1,0 +1,36 @@
+# Deploy otomatis ke Fly.io setiap push. Butuh secret repo FLY_API_TOKEN (fly tokens create deploy).
+name: Deploy ke Fly.io
+
+on:
+  push:
+    branches: [feat/redesign-kiosk]
+  workflow_dispatch:
+
+concurrency: fly-deploy
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    steps:
+      - if: env.FLY_API_TOKEN == ''
+        run: echo "FLY_API_TOKEN belum diisi; deploy dilewati."
+      - if: env.FLY_API_TOKEN != ''
+        uses: actions/checkout@v4
+      - if: env.FLY_API_TOKEN != ''
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      - if: env.FLY_API_TOKEN != ''
+        run: flyctl deploy --remote-only

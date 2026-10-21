@@ -42,6 +42,22 @@ Landing: `http://localhost:3000/`. Booth: `http://localhost:3000/booth`. Admin: 
 
 ## Deploy
 
+### Fly.io (disarankan)
+
+`fly.toml` dan `Dockerfile` sudah menyetel region Singapore (`sin`), volume `/data`, health check `/healthz`, dan satu mesin. Image di-build di server Fly, jadi Docker tidak perlu terpasang.
+
+1. Pasang flyctl (PowerShell): `iwr https://fly.io/install.ps1 -useb | iex`, lalu buka terminal baru.
+2. `fly auth signup` (atau `fly auth login`). Fly meminta kartu kredit untuk verifikasi.
+3. Buat app (ganti `photobooth-anugrah` di `fly.toml` bila nama sudah dipakai): `fly apps create photobooth-anugrah`
+4. Buat volume 1 GB di Singapore: `fly volumes create photobooth_data --region sin --size 1`
+5. Isi rahasia:
+   `fly secrets set SESSION_SECRET=<string-acak> ADMIN_USERNAME=admin ADMIN_PASSWORD=<password-minimal-8>`
+6. Deploy: `fly deploy --remote-only`. Aplikasi ada di `https://photobooth-anugrah.fly.dev`.
+
+**Deploy otomatis dari GitHub:** buat token dengan `fly tokens create deploy`, lalu simpan di GitHub repo → **Settings → Secrets and variables → Actions → New repository secret** dengan nama `FLY_API_TOKEN`. Setelah itu, setiap push ke cabang `feat/redesign-kiosk` menjalankan `npm test` lalu deploy (`.github/workflows/fly-deploy.yml`). Tanpa token, langkah deploy dilewati.
+
+Mesin berhenti otomatis saat sepi untuk menghemat biaya, sehingga kunjungan pertama butuh beberapa detik untuk menyala. Untuk acara, ubah `min_machines_running = 1` di `fly.toml` lalu deploy ulang.
+
 ### Render
 
 `render.yaml` (Blueprint) sudah menyetel service Node di region Singapore, disk persisten 1 GB di `/data`, health check `/healthz`, `SESSION_SECRET` acak, dan deploy otomatis dari cabang `feat/redesign-kiosk`. Ganti `branch` di file itu bila cabang produksinya berubah.
