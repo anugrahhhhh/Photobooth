@@ -117,8 +117,47 @@
         </div>
       </section>
       <section data-screen="review" hidden></section>
-      <section data-screen="adjust" hidden></section>
-      <section data-screen="result" hidden></section>
+      <section data-screen="adjust" hidden>
+        <div class="adjust">
+          <div class="adjust-stage" id="adjust-stage">
+            <canvas id="adjust-canvas" aria-label="Pratinjau photostrip. Ketuk slot untuk memilih, geser untuk mengatur posisi." data-i18n-attr="aria-label:booth.adjust.canvas"></canvas>
+          </div>
+          <div class="adjust-panel card">
+            <p class="hint" data-i18n="booth.adjust.hint">Ketuk foto untuk memilih, geser untuk mengatur, cubit untuk zoom.</p>
+            <div class="zoom-row">
+              <button type="button" id="zoom-out" class="btn btn-icon" aria-label="Perkecil" data-i18n-attr="aria-label:booth.adjust.zoomOut">&minus;</button>
+              <input type="range" id="zoom" class="range" min="1" max="3" step="0.01" value="1" aria-label="Zoom" data-i18n-attr="aria-label:booth.adjust.zoom" />
+              <button type="button" id="zoom-in" class="btn btn-icon" aria-label="Perbesar" data-i18n-attr="aria-label:booth.adjust.zoomIn">+</button>
+            </div>
+            <div class="chips" id="filters" role="group" aria-label="Filter" data-i18n-attr="aria-label:booth.adjust.filters"></div>
+            <div class="row">
+              <button type="button" id="retake" class="btn" data-i18n="booth.adjust.retake">Ulang foto ini</button>
+              <button type="button" id="change-template" class="btn" data-i18n="booth.adjust.changeTemplate">Ganti bingkai</button>
+            </div>
+            <button type="button" class="btn btn-primary btn-lg" id="to-result" data-i18n="booth.adjust.next">Lanjut</button>
+          </div>
+        </div>
+      </section>
+      <section data-screen="result" hidden>
+        <div class="result">
+          <img id="result-img" alt="Hasil photostrip" data-i18n-attr="alt:booth.result.alt" />
+          <div class="result-actions card">
+            <button type="button" class="btn btn-primary btn-lg" id="download" disabled data-i18n="booth.result.preparing">Menyiapkan...</button>
+            <div class="row">
+              <button type="button" id="back-to-adjust" class="btn" data-i18n="booth.result.backToAdjust">Atur lagi</button>
+              <button type="button" id="restart" class="btn" data-i18n="booth.result.restart">Ulang sesi</button>
+              <button type="button" id="new-session" class="btn" data-i18n="booth.result.newSession">Sesi baru</button>
+            </div>
+            <p class="status-msg" id="result-status" role="status"></p>
+          </div>
+        </div>
+      </section>
     </main>
+
+    <div class="save-overlay" id="save-overlay" hidden>
+      <p data-i18n="booth.result.saveHint">Tekan lama gambar lalu pilih "Simpan".</p>
+      <img id="save-overlay-img" alt="Photostrip untuk disimpan" data-i18n-attr="alt:booth.result.saveAlt" />
+      <button type="button" id="save-overlay-close" class="btn btn-lg" data-i18n="common.close">Tutup</button>
+    </div>
   </body>
 </html>

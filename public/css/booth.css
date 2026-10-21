@@ -116,3 +116,50 @@
   .viewfinder { justify-self: end; width: min(100%, calc((100dvh - 140px) * var(--ratio, 0.75))); }
   .shoot-panel { justify-self: start; align-content: center; }
 }
+
+/* Layar atur dan hasil */
+.adjust { display: grid; gap: 16px; }
+.adjust-stage { min-height: 50dvh; display: grid; place-items: center; }
+.adjust-stage canvas {
+  display: block;
+  touch-action: none;
+  max-width: 100%;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  cursor: grab;
+}
+.adjust-panel { display: grid; gap: 14px; align-content: start; }
+.hint { margin: 0; color: var(--muted); font-size: 14px; }
+.zoom-row { display: flex; align-items: center; gap: 8px; }
+.zoom-row .range { flex: 1; }
+.adjust-panel .chips { margin: 0; }
+
+.result { display: grid; gap: 16px; justify-items: center; align-content: start; }
+.result img {
+  max-width: 100%;
+  max-height: calc(100dvh - 200px);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  background: var(--surface);
+}
+.result img:not([src]) { visibility: hidden; min-height: 160px; }
+.result-actions { display: grid; gap: 12px; justify-items: center; }
+
+@media (min-width: 800px) {
+  .adjust { grid-template-columns: minmax(0, 1fr) 320px; }
+  .result { grid-template-columns: minmax(0, 1fr) 320px; align-items: center; }
+}
+
+.save-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgb(0 0 0 / 88%);
+  color: #fff;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  justify-items: center;
+  gap: 16px;
+  padding: 16px;
+}
+.save-overlay img { max-width: 100%; max-height: 100%; object-fit: contain; -webkit-touch-callout: default; }
