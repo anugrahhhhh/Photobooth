@@ -5,6 +5,7 @@ import { KEYS, read } from '../storage.js';
 import { initTheme, bindThemeToggle, refreshThemeToggles } from '../theme.js';
 import { applyI18n, bindLangSelect, initialLang, onLangChange, setLang, t } from '../i18n.js';
 import { createState, resetAll } from '../state.js';
+import { initSound, isEnabled, setEnabled, unlock } from '../sound.js';
 import { createWakeLock } from '../wake-lock.js';
 import { createResultStore } from './result-store.js';
 import * as welcome from './screens/welcome.js';
@@ -103,6 +104,24 @@ function initMenu() {
   bindLangSelect($('#welcome-lang'));
 }
 
+// Tombol suara hanya di luar kiosk; keadaan dibaca ulang setelah pengaturan server masuk.
+function bindSoundToggle() {
+  const btn = $('#sound-toggle');
+  const sync = () => {
+    const on = isEnabled();
+    btn.setAttribute('aria-pressed', String(on));
+    btn.textContent = on ? '\u{1F50A}' : '\u{1F507}';
+  };
+  btn.hidden = read(KEYS.kiosk) === '1';
+  btn.addEventListener('click', () => {
+    unlock();
+    setEnabled(!isEnabled());
+    sync();
+  });
+  sync();
+  return sync;
+}
+
 async function start() {
   initTheme();
   setLang(
@@ -120,9 +139,12 @@ async function start() {
 
   // Layar dipasang dulu dengan cadangan; pengaturan server menyusul di tempat yang sama.
   const ctx = createCtx({ ...DEFAULT_SETTINGS });
+  initSound(ctx.settings);
+  const syncSound = bindSoundToggle();
   for (const screen of Object.values(SCREENS)) screen.init(ctx);
   ctx.go('welcome');
   Object.assign(ctx.settings, await getJSON('/api/settings').catch(() => ({})));
+  syncSound();
 }
 
 start().catch((err) => {

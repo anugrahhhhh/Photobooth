@@ -5,6 +5,8 @@ import { cameraErrorMessage, isFrontCamera, createRestartPolicy } from '../../ca
 import { fitWithin } from '../../geometry.js';
 import { overlayLayout, applyOverlay } from '../overlay.js';
 import { nextEmptySlot, releaseCanvas } from '../../state.js';
+import { beep, shutter } from '../../sound.js';
+import { shouldReview } from '../review-timer.js';
 
 export const MAX_PHOTO_SIDE = 1920;
 export const NEXT_SHOT_DELAY_MS = 800;
@@ -143,6 +145,7 @@ async function countdown(seconds, token) {
   node.hidden = false;
   for (let s = seconds; s > 0; s--) {
     node.textContent = String(s);
+    beep(s === 1);
     await sleep(1000);
     if (token.cancelled) return false;
   }
@@ -163,27 +166,48 @@ async function runSequence() {
   const token = { cancelled: false };
   runToken = token;
   syncControls();
-  while (!token.cancelled) {
-    const slot = currentSlot();
-    if (slot < 0) break;
-    updateView();
-    // Dibaca saat dipakai: pengaturan server menyusul setelah layar dipasang.
-    if (!(await countdown(Number(ctx.settings.countdown_seconds ?? 3), token))) return;
-    if (!camera.isLive()) {
-      cancelRun();
-      return recoverCamera();
+  ctx.idle?.pause();
+  let idleResumed = false;
+  const resumeIdle = () => {
+    if (idleResumed) return;
+    idleResumed = true;
+    ctx.idle?.resume();
+  };
+  try {
+    while (!token.cancelled) {
+      const slot = currentSlot();
+      if (slot < 0) break;
+      updateView();
+      // Dibaca saat dipakai: pengaturan server menyusul setelah layar dipasang.
+      if (!(await countdown(Number(ctx.settings.countdown_seconds ?? 3), token))) return;
+      if (!camera.isLive()) {
+        cancelRun();
+        return recoverCamera();
+      }
+      flash();
+      shutter();
+      const mirror = ctx.settings.mirror_output === 1 && frontCamera();
+      setPhoto(ctx, slot, camera.capture($('#video'), MAX_PHOTO_SIDE, { mirror }));
+      if (shouldReview(ctx.settings.review_seconds, 'camera')) {
+        const target = ctx.session.target;
+        runToken = null;
+        syncControls();
+        resumeIdle(); // dilepas sebelum pindah: review.enter menjeda lagi
+        ctx.go('review', { slot, target });
+        return;
+      }
+      if (ctx.session.target != null) break;
+      if (nextEmptySlot(ctx.state) >= 0) await sleep(NEXT_SHOT_DELAY_MS);
     }
-    flash();
-    const mirror = ctx.settings.mirror_output === 1 && frontCamera();
-    setPhoto(ctx, slot, camera.capture($('#video'), MAX_PHOTO_SIDE, { mirror }));
-    if (ctx.session.target != null) break;
-    if (nextEmptySlot(ctx.state) >= 0) await sleep(NEXT_SHOT_DELAY_MS);
+    if (token.cancelled) return;
+    runToken = null;
+    syncControls();
+    ctx.session.target = null;
+    resumeIdle();
+    ctx.go('adjust');
+  } finally {
+    resumeIdle();
   }
-  if (token.cancelled) return;
-  runToken = null;
-  syncControls();
-  ctx.session.target = null;
-  ctx.go('adjust');
 }
 
 /* ---------- Galeri ---------- */

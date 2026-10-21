@@ -21,7 +21,7 @@
         <li data-step="result" data-i18n="booth.steps.result">Unduh</li>
       </ol>
       <div class="booth-header-tools">
-        <button type="button" class="btn btn-icon" id="sound-toggle" aria-label="Suara" data-i18n-attr="aria-label:booth.sound.toggle" hidden>&#128266;</button>
+        <button type="button" class="btn btn-icon" id="sound-toggle" aria-label="Suara" aria-pressed="true" data-kiosk-hide data-i18n-attr="aria-label:booth.sound.toggle" hidden>&#128266;</button>
         <div class="booth-menu" id="booth-menu">
           <button type="button" class="btn btn-icon" id="menu-toggle" aria-expanded="false" aria-controls="menu-panel" aria-label="Menu" data-i18n-attr="aria-label:booth.menu.label">&#9776;</button>
           <div class="booth-menu-panel card" id="menu-panel" hidden>
@@ -117,7 +117,22 @@
           </div>
         </div>
       </section>
-      <section data-screen="review" hidden></section>
+      <section data-screen="review" hidden>
+        <div class="shoot review">
+          <div class="viewfinder" id="review-frame">
+            <div class="overlay-hole"><canvas id="review-photo"></canvas></div>
+            <img class="overlay-frame" alt="" draggable="false">
+          </div>
+          <div class="shoot-panel">
+            <h2 class="shoot-label" data-i18n="booth.review.title">Tinjau</h2>
+            <div class="progress-bar review-bar" aria-hidden="true"><span id="review-bar"></span></div>
+            <div class="shoot-controls">
+              <button type="button" class="btn btn-lg" id="review-retake" data-i18n="booth.review.retake">Ulang</button>
+              <button type="button" class="btn btn-primary btn-lg" id="review-next" data-i18n="booth.review.next">Lanjut</button>
+            </div>
+          </div>
+        </div>
+      </section>
       <section data-screen="adjust" hidden>
         <div class="adjust">
           <div class="adjust-stage" id="adjust-stage">
