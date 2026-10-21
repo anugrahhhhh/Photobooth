@@ -70,3 +70,30 @@ test('tanpa mapPhoto: filtered[i] dipakai dan tidak dilepas', () => {
   assert.deepEqual(drawn, ['fa']);
   assert.equal(filtered[0].width, 96);
 });
+
+test('render dua kali dengan skala sama: width ditulis sekali, kedua kali dibersihkan', () => {
+  const canvas = fakeCanvas();
+  const writes = [];
+  let w = 0;
+  let h = 0;
+  Object.defineProperty(canvas, 'width', { get: () => w, set: (v) => (writes.push('width'), (w = v)) });
+  Object.defineProperty(canvas, 'height', { get: () => h, set: (v) => (writes.push('height'), (h = v)) });
+  render(canvas, { template, img: null, photos: [], scale: 1 });
+  render(canvas, { template, img: null, photos: [], scale: 1 });
+  assert.equal(writes.filter((k) => k === 'width').length, 1);
+  assert.equal(writes.filter((k) => k === 'height').length, 1);
+  const names = canvas.calls.map((c) => c[0]);
+  assert.equal(names.filter((n) => n === 'clearRect').length, 1);
+  const i = names.indexOf('clearRect');
+  assert.deepEqual(canvas.calls[i - 1], ['setTransform', 1, 0, 0, 1, 0, 0]);
+  assert.deepEqual(canvas.calls[i], ['clearRect', 0, 0, 100, 300]);
+  assert.ok(names.indexOf('fillRect', i) > i, 'latar diisi setelah dibersihkan');
+});
+
+test('render dengan skala berbeda mengubah ukuran lagi', () => {
+  const canvas = fakeCanvas();
+  render(canvas, { template, img: null, photos: [], scale: 1 });
+  render(canvas, { template, img: null, photos: [], scale: 0.5 });
+  assert.equal(canvas.width, 50);
+  assert.equal(canvas.height, 150);
+});

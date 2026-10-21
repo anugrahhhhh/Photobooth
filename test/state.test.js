@@ -21,6 +21,7 @@ test('createState sesuai bentuk spec', () => {
     filter: 'normal',
     facingRequested: 'user',
     logged: false,
+    logging: false,
   });
 });
 
@@ -113,4 +114,38 @@ test('latestOnly: hanya permintaan terakhir yang masih berlaku', async () => {
   assert.equal(latest.pending(), true);
   latest.done(c);
   assert.equal(latest.pending(), false);
+});
+
+test('logSessionOnce: dua panggilan serentak hanya mengirim sekali', async () => {
+  const { logSessionOnce } = await import('../public/js/state.js');
+  const s = createState();
+  let calls = 0;
+  const send = () => (calls++, Promise.resolve());
+  await Promise.all([logSessionOnce(s, send), logSessionOnce(s, send)]);
+  assert.equal(calls, 1);
+  assert.equal(s.logged, true);
+  assert.equal(s.logging, false);
+  await logSessionOnce(s, send);
+  assert.equal(calls, 1);
+});
+
+test('logSessionOnce: gagal tidak menandai logged dan bisa dicoba lagi', async () => {
+  const { logSessionOnce } = await import('../public/js/state.js');
+  const s = createState();
+  let calls = 0;
+  await logSessionOnce(s, () => (calls++, Promise.reject(new Error('jaringan')))).catch(() => {});
+  assert.equal(s.logged, false);
+  assert.equal(s.logging, false);
+  await logSessionOnce(s, () => (calls++, Promise.resolve()));
+  assert.equal(calls, 2);
+  assert.equal(s.logged, true);
+});
+
+test('resetPhotos mengembalikan logged dan logging ke false', () => {
+  const s = withPhotos(1);
+  s.logged = true;
+  s.logging = true;
+  resetPhotos(s);
+  assert.equal(s.logged, false);
+  assert.equal(s.logging, false);
 });
