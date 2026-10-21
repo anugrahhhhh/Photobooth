@@ -1,6 +1,6 @@
 import { getJSON } from '../../js/api.js';
 import { renderBarChart } from '../chart.js';
-import { $, el, setStatus, adminApi, button, STATUS_LABEL } from '../common.js';
+import { $, el, setStatus, adminApi } from '../common.js';
 
 export async function init() {
   const status = $('#status');
@@ -8,9 +8,7 @@ export async function init() {
 
   const refresh = async () => {
     try {
-      const [stats, templates] = await Promise.all([adminApi.get('/api/admin/stats'), adminApi.get('/api/admin/templates')]);
-      renderStats(stats);
-      renderTemplates(templates, refresh, status);
+      renderStats(await adminApi.get('/api/admin/stats'));
     } catch (err) {
       setStatus(status, err.message, 'error');
     }
@@ -30,55 +28,6 @@ function renderStats(stats) {
     ...stats.top.slice(0, 5).map((t) => el('li', {}, el('span', { className: 'top-name', textContent: t.name }), el('span', { className: 'num', textContent: `${t.count} sesi` }))),
   );
   $('#top-empty').hidden = stats.top.length > 0;
-}
-
-function renderTemplates(templates, refresh, status) {
-  $('#templates-empty').hidden = templates.length > 0;
-  const act = async (fn, okMessage) => {
-    try {
-      await fn();
-      setStatus(status, okMessage, 'ok');
-      await refresh();
-    } catch (err) {
-      setStatus(status, err.message, 'error');
-    }
-  };
-  const setTemplateStatus = (t, next, msg) =>
-    act(() => adminApi.json('PATCH', `/api/admin/templates/${t.id}/status`, { status: next }), msg);
-
-  const rows = templates.map((t) => {
-    const actions = el('div', { className: 'actions' });
-    actions.append(el('a', { className: 'btn btn-sm', href: `/admin/template-edit.html?id=${t.id}`, textContent: 'Edit' }));
-    if (t.status === 'active') {
-      actions.append(button('Nonaktifkan', () => setTemplateStatus(t, 'inactive', `"${t.name}" dinonaktifkan`)));
-    } else {
-      actions.append(button('Aktifkan', () => setTemplateStatus(t, 'active', `"${t.name}" diaktifkan`)));
-    }
-    if (t.status !== 'archived') {
-      actions.append(button('Arsipkan', () => setTemplateStatus(t, 'archived', `"${t.name}" diarsipkan`)));
-    }
-    if (t.usage_count === 0) {
-      const del = button('Hapus', () => {
-        if (!confirm(`Hapus template "${t.name}" secara permanen?`)) return;
-        act(() => adminApi.json('DELETE', `/api/admin/templates/${t.id}`), `"${t.name}" dihapus`);
-      });
-      del.className = 'btn btn-sm btn-danger';
-      actions.append(del);
-    }
-
-    return el(
-      'tr',
-      {},
-      el('td', {}, el('img', { className: 'thumb', src: t.thumb_url, alt: '', loading: 'lazy' })),
-      el('td', {}, t.name),
-      el('td', { className: 'num' }, `${t.canvas_w}×${t.canvas_h}`),
-      el('td', { className: 'num' }, String(t.photo_count)),
-      el('td', {}, el('span', { className: `badge ${t.status}` }, STATUS_LABEL[t.status] ?? t.status)),
-      el('td', { className: 'num' }, String(t.usage_count)),
-      el('td', {}, actions),
-    );
-  });
-  $('#templates').replaceChildren(...rows);
 }
 
 async function initSettingsForm() {

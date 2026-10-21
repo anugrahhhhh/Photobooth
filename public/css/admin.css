@@ -84,6 +84,9 @@ input[type="file"].input { padding: 8px 10px; }
 .top-list .num { color: var(--muted); font-variant-numeric: tabular-nums; }
 
 /* Tabel */
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.toolbar .field:first-child { flex: 1 1 220px; }
+.toolbar .field:last-child { flex: 0 1 160px; }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
@@ -95,6 +98,22 @@ td.num { font-variant-numeric: tabular-nums; }
 .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
 .badge.active { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--text); border-color: var(--accent); }
 .badge.archived { text-decoration: line-through; }
+
+/* Tabel template: di bawah 768px setiap baris menjadi kartu */
+@media (max-width: 767px) {
+  .table-wrap table, .table-wrap tbody { display: block; }
+  .table-wrap thead { display: none; }
+  .table-wrap tbody tr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .table-wrap tbody tr:last-child { border-bottom: 0; }
+  .table-wrap td { padding: 0; border: 0; }
+  .c-name { flex: 1 1 120px; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+  .c-meta { font-size: 13px; color: var(--muted); }
+  .c-meta::before { content: attr(data-label) ": "; }
+  .c-thumb { order: 0; } .c-name { order: 1; } .c-status { order: 2; }
+  .c-meta { order: 3; }
+  .c-status { flex: 0 0 auto; }
+  .c-actions { order: 4; flex: 1 0 100%; margin-top: 6px; }
+}
 
 /* Pengaturan (di dashboard untuk sementara) */
 .settings-form { display: grid; gap: 14px; max-width: 420px; margin-bottom: 8px; }

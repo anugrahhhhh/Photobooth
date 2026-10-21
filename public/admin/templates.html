@@ -12,8 +12,47 @@
   </head>
   <body data-page="templates">
     <main id="content">
-      <h1>Template</h1>
-      <p class="status-msg" role="status">Memuat…</p>
+      <header class="page-head">
+        <h1>Template</h1>
+        <a class="btn btn-primary" href="/admin/template-edit.html">+ Template baru</a>
+      </header>
+
+      <p id="status" class="status-msg" role="status"></p>
+
+      <section class="card section">
+        <div class="toolbar">
+          <div class="field">
+            <label for="search">Cari nama</label>
+            <input id="search" class="input" type="search" placeholder="Cari template…" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="status-filter">Status</label>
+            <select id="status-filter" class="input">
+              <option value="all">Semua</option>
+              <option value="active">Aktif</option>
+              <option value="inactive">Nonaktif</option>
+              <option value="archived">Arsip</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Gambar</th>
+                <th>Nama</th>
+                <th>Ukuran</th>
+                <th>Slot</th>
+                <th>Status</th>
+                <th>Dipakai</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="templates"></tbody>
+          </table>
+        </div>
+        <p id="templates-empty" class="status-msg" hidden></p>
+      </section>
     </main>
   </body>
 </html>
