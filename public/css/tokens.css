@@ -1,0 +1,119 @@
+/* Design tokens. Spec section 2.1.
+   Format kept simple on purpose (test/tokens.test.js parses it):
+   one `--name: value;` per line, no nested rules, one selector per block.
+   Dark blocks only override what differs from the light block of the same skin.
+   data-theme is always "light" or "dark" (theme-boot.js / theme.js). */
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("../fonts/bricolage-grotesque-latin-800-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/plus-jakarta-sans-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/plus-jakarta-sans-latin-600-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/plus-jakarta-sans-latin-700-normal.woff2") format("woff2");
+}
+
+/* Fun skin (landing, booth), light */
+[data-skin="fun"] {
+  --bg: #FFF6EC;
+  --grid: #F3E6D6;
+  --surface: #FFFFFF;
+  --ink: #16161A;
+  --text: var(--ink);
+  --muted: #5B5B66;
+  --primary: #FF5A4E;
+  --on-primary: #16161A;
+  --primary-soft: #FFE6E3;
+  --accent: #14B8A6;
+  --on-accent: #16161A;
+  --sun: #FFC94D;
+  --line: var(--ink);
+  --border: var(--line);
+  --outline: 2.5px solid var(--line);
+  --shadow: 3px 3px 0 var(--line);
+  --shadow-lg: 5px 5px 0 var(--line);
+  --radius: 12px;
+  --radius-lg: 20px;
+  --radius-btn: 999px;
+  --font-display: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tap: 44px;
+  --tap-lg: 56px;
+}
+
+/* Fun skin, dark: text is light, outline and shadow stay black */
+[data-skin="fun"][data-theme="dark"] {
+  --bg: #17161C;
+  --grid: #24222B;
+  --surface: #22212A;
+  --ink: #F4F4F5;
+  --muted: #A1A1AA;
+  --primary: #FF6B60;
+  --on-primary: #16161A;
+  --primary-soft: #3A1F1D;
+  --accent: #2DD4BF;
+  --sun: #F5C451;
+  --line: #000000;
+}
+
+/* Clean skin (admin), light */
+[data-skin="clean"] {
+  --bg: #FAFAF9;
+  --surface: #FFFFFF;
+  --border: #E7E5E4;
+  --text: #27272A;
+  --ink: var(--text);
+  --muted: #71717A;
+  --primary: #D93A2F;
+  --on-primary: #FFFFFF;
+  --primary-soft: #FFF1EF;
+  --accent: #0F8F82;
+  --on-accent: #FFFFFF;
+  --line: var(--border);
+  --outline: 1px solid var(--border);
+  --shadow: 0 1px 2px rgb(0 0 0 / 6%);
+  --shadow-lg: 0 4px 14px rgb(0 0 0 / 10%);
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-btn: 10px;
+  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tap: 44px;
+  --tap-lg: 56px;
+}
+
+/* Clean skin, dark */
+[data-skin="clean"][data-theme="dark"] {
+  --bg: #141317;
+  --surface: #1D1C21;
+  --border: #2E2D33;
+  --text: #EDEDEF;
+  --muted: #A1A1AA;
+  --primary: #FF6B60;
+  --on-primary: #16161A;
+  --primary-soft: #3A1F1D;
+  --accent: #2DD4BF;
+  --on-accent: #16161A;
+  --shadow: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-lg: 0 4px 14px rgb(0 0 0 / 50%);
+}
