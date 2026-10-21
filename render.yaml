@@ -1,0 +1,33 @@
+# Blueprint Render: satu web service Node dengan disk persisten untuk SQLite dan unggahan template.
+# Disk persisten tidak tersedia di paket free; tanpa `plan`, Render memakai paket berbayar default.
+services:
+  - type: web
+    name: photobooth
+    runtime: node
+    region: singapore
+    branch: feat/redesign-kiosk
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: TZ
+        value: Asia/Jakarta
+      - key: DB_PATH
+        value: /data/photobooth.db
+      - key: UPLOAD_DIR
+        value: /data/uploads
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false

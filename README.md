@@ -42,7 +42,17 @@ Landing: `http://localhost:3000/`. Booth: `http://localhost:3000/booth`. Admin: 
 
 ## Deploy
 
-### Railway (disarankan)
+### Render
+
+`render.yaml` (Blueprint) sudah menyetel service Node di region Singapore, disk persisten 1 GB di `/data`, health check `/healthz`, `SESSION_SECRET` acak, dan deploy otomatis dari cabang `feat/redesign-kiosk`. Ganti `branch` di file itu bila cabang produksinya berubah.
+
+1. Di [dashboard.render.com](https://dashboard.render.com): **New → Blueprint** → hubungkan GitHub → pilih repo ini.
+2. Render membaca `render.yaml` dan meminta nilai `ADMIN_USERNAME` serta `ADMIN_PASSWORD` (minimal 8 karakter). Isi, lalu **Apply**.
+3. Setelah deploy selesai, aplikasi ada di `https://photobooth-xxxx.onrender.com`.
+
+Disk persisten hanya tersedia di paket berbayar, jadi service ini tidak bisa memakai paket free. Service dengan disk tidak bisa di-scale ke lebih dari satu instance, dan itu memang yang dibutuhkan SQLite.
+
+### Railway
 
 `railway.json` sudah menyetel perintah start, health check `/healthz`, dan satu instance.
 
