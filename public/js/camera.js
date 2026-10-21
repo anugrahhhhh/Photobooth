@@ -1,4 +1,5 @@
 import { fitWithin } from './geometry.js';
+import { KEYS, read, write } from './storage.js';
 
 /* ---------- Bagian murni (diuji di Node) ---------- */
 
@@ -44,27 +45,17 @@ export function createRestartPolicy(max = 3) {
 
 /* ---------- Bagian DOM ---------- */
 
-const STORAGE_KEY = 'pb.cameraId';
 let stream = null;
 let lostHandler = null;
 // Naik setiap start()/stop(); start yang tersusul membuang stream yang didapatnya.
 let generation = 0;
 
 export function savedCameraId() {
-  try {
-    return localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return null;
-  }
+  return read(KEYS.cameraId);
 }
 
 export function saveCameraId(id) {
-  try {
-    if (id) localStorage.setItem(STORAGE_KEY, id);
-    else localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // penyimpanan tidak tersedia (mode privat)
-  }
+  write(KEYS.cameraId, id || null);
 }
 
 export function onStreamLost(cb) {
