@@ -1,4 +1,6 @@
 import { test } from 'node:test';
+import vm from 'node:vm';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { THEME_PREFS, readThemePref, nextThemePref, resolveTheme } from '../public/js/theme.js';
 import { PRODUCT_NAME } from '../public/js/brand.js';
@@ -23,4 +25,26 @@ test('readThemePref: nilai tak dikenal atau storage melempar -> system', () => {
   assert.equal(readThemePref({ getItem: () => 'ungu' }), 'system');
   assert.equal(readThemePref({ getItem: () => 'dark' }), 'dark');
   assert.equal(readThemePref({ getItem() { throw new Error('x'); } }), 'system');
+});
+
+function runBoot({ pref, dark, storageThrows }) {
+  const attrs = {};
+  const ctx = {
+    localStorage: { getItem() { if (storageThrows) throw new Error('x'); return pref; } },
+    window: { matchMedia: () => ({ matches: dark }) },
+    document: { documentElement: { setAttribute: (k, v) => { attrs[k] = v; } } },
+  };
+  vm.runInNewContext(readFileSync(new URL('../public/js/theme-boot.js', import.meta.url), 'utf8'), ctx);
+  return attrs['data-theme'];
+}
+
+test('theme-boot: storage melempar + OS gelap -> dark', () => {
+  assert.equal(runBoot({ dark: true, storageThrows: true }), 'dark');
+});
+
+test('theme-boot: pilihan dan sistem', () => {
+  assert.equal(runBoot({ pref: 'light', dark: true }), 'light');
+  assert.equal(runBoot({ pref: 'dark', dark: false }), 'dark');
+  assert.equal(runBoot({ pref: 'ungu', dark: true }), 'dark');
+  assert.equal(runBoot({ pref: null, dark: false }), 'light');
 });

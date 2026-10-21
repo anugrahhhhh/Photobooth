@@ -7,7 +7,7 @@ const ICONS = { system: '\u25D0', light: '\u2600', dark: '\u263E' };
 const LABELS = { system: 'Tema: ikuti sistem', light: 'Tema: terang', dark: 'Tema: gelap' };
 
 export function readThemePref(store) {
-  const v = store === undefined ? read(KEYS.theme) : read(KEYS.theme, store);
+  const v = read(KEYS.theme, store);
   return THEME_PREFS.includes(v) ? v : 'system';
 }
 

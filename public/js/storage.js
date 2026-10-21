@@ -19,7 +19,7 @@ export function read(key, store = globalThis.localStorage) {
 // value null = hapus kunci
 export function write(key, value, store = globalThis.localStorage) {
   try {
-    if (value === null) store.removeItem(key);
+    if (value == null) store.removeItem(key);
     else store.setItem(key, value);
   } catch {
     // penyimpanan tidak tersedia
