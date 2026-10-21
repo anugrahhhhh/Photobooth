@@ -1,37 +1,38 @@
-# Konfigurasi Fly.io. Nama app harus unik di seluruh Fly; ganti bila sudah dipakai orang lain.
-app = "photobooth-anugrah"
-primary_region = "sin"
+# fly.toml app configuration file generated for photobooth-anugrah on 2026-10-21T23:09:42Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'photobooth-anugrah'
+primary_region = 'sin'
 
 [build]
 
 [env]
-  NODE_ENV = "production"
-  PORT = "8080"
-  TZ = "Asia/Jakarta"
-  DB_PATH = "/data/photobooth.db"
-  UPLOAD_DIR = "/data/uploads"
+  DB_PATH = '/data/photobooth.db'
+  NODE_ENV = 'production'
+  PORT = '8080'
+  TZ = 'Asia/Jakarta'
+  UPLOAD_DIR = '/data/uploads'
 
-# SQLite dan template disimpan di volume ini; satu mesin saja.
 [[mounts]]
-  source = "photobooth_data"
-  destination = "/data"
+  source = 'photobooth_data'
+  destination = '/data'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  # Mesin berhenti saat sepi dan menyala lagi saat ada pengunjung (hemat biaya).
-  # Untuk acara, set min_machines_running = 1 agar tidak ada jeda menyala.
-  auto_stop_machines = "stop"
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
 
   [[http_service.checks]]
-    grace_period = "15s"
-    interval = "30s"
-    method = "GET"
-    path = "/healthz"
-    timeout = "5s"
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '15s'
+    method = 'GET'
+    path = '/healthz'
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
+  size = 'shared-cpu-1x'
+  memory = '512mb'
