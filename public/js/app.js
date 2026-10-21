@@ -1,4 +1,5 @@
 import { getJSON, sendJSON } from './api.js';
+import { t } from './i18n.js';
 import * as camera from './camera.js';
 import { cameraErrorMessage, isFrontCamera, createRestartPolicy } from './camera.js';
 import { FILTERS, filteredCanvas } from './filters.js';
@@ -231,7 +232,7 @@ async function startCamera(pref) {
   } catch (err) {
     setCameraSwitching(false);
     cameraInfo = null;
-    showCameraError(cameraErrorMessage(err));
+    showCameraError(t(cameraErrorMessage(err)));
   }
 }
 
@@ -241,7 +242,7 @@ async function refreshCameraList() {
   const multiple = cams.length > 1;
   $('#flip').hidden = !multiple || !IS_TOUCH;
   select.hidden = !multiple;
-  select.replaceChildren(...cams.map((c) => el('option', { value: c.deviceId, textContent: c.label })));
+  select.replaceChildren(...cams.map((c, i) => el('option', { value: c.deviceId, textContent: c.label || t('booth.shoot.cameraN', { n: i + 1 }) })));
   if (cameraInfo?.deviceId) select.value = cameraInfo.deviceId;
 }
 
