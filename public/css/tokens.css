@@ -47,6 +47,7 @@
   --accent: #14B8A6;
   --on-accent: #16161A;
   --sun: #FFC94D;
+  --focus: #16161A;
   --line: var(--ink);
   --border: var(--line);
   --outline: 2.5px solid var(--line);
@@ -73,6 +74,7 @@
   --primary-soft: #3A1F1D;
   --accent: #2DD4BF;
   --sun: #F5C451;
+  --focus: #F4F4F5;
   --line: #000000;
 }
 
@@ -88,7 +90,8 @@
   --on-primary: #FFFFFF;
   --primary-soft: #FFF1EF;
   --accent: #0F8F82;
-  --on-accent: #FFFFFF;
+  --on-accent: #16161A;
+  --focus: #0F8F82;
   --line: var(--border);
   --outline: 1px solid var(--border);
   --shadow: 0 1px 2px rgb(0 0 0 / 6%);
@@ -113,6 +116,7 @@
   --on-primary: #16161A;
   --primary-soft: #3A1F1D;
   --accent: #2DD4BF;
+  --focus: #2DD4BF;
   --on-accent: #16161A;
   --shadow: 0 1px 2px rgb(0 0 0 / 40%);
   --shadow-lg: 0 4px 14px rgb(0 0 0 / 50%);

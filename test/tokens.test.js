@@ -57,8 +57,8 @@ test('keempat blok token ada', () => {
 });
 
 const PAIRS = {
-  fun: [['--ink', '--bg'], ['--ink', '--surface'], ['--muted', '--bg'], ['--muted', '--surface'], ['--on-primary', '--primary']],
-  clean: [['--text', '--bg'], ['--text', '--surface'], ['--muted', '--surface'], ['--on-primary', '--primary']],
+  fun: [['--ink', '--bg'], ['--ink', '--surface'], ['--muted', '--bg'], ['--muted', '--surface'], ['--on-primary', '--primary'], ['--on-accent', '--accent']],
+  clean: [['--text', '--bg'], ['--text', '--surface'], ['--muted', '--surface'], ['--on-primary', '--primary'], ['--on-accent', '--accent']],
 };
 for (const [name, map] of Object.entries(effective)) {
   const skin = name.startsWith('fun') ? 'fun' : 'clean';
@@ -67,6 +67,17 @@ for (const [name, map] of Object.entries(effective)) {
       assert.ok(map[fg] && map[bg], `token hilang: ${fg} atau ${bg}`);
       const r = contrast(map[fg], map[bg]);
       assert.ok(r >= 4.5, `${map[fg]} di ${map[bg]} = ${r.toFixed(2)}`);
+    });
+  }
+}
+
+// Focus ring is non-text UI: WCAG 1.4.11 asks for 3:1 against adjacent colors.
+for (const [name, map] of Object.entries(effective)) {
+  for (const bg of ['--bg', '--surface']) {
+    test(`fokus ${name}: --focus di ${bg} >= 3`, () => {
+      assert.ok(map['--focus'], `${name} tanpa --focus`);
+      const r = contrast(map['--focus'], map[bg]);
+      assert.ok(r >= 3, `${map['--focus']} di ${map[bg]} = ${r.toFixed(2)}`);
     });
   }
 }
@@ -97,5 +108,13 @@ test('setiap url() di @font-face menunjuk file yang ada di public/fonts', () => 
       const file = new URL(`../public/fonts/${u.split('/fonts/')[1]}`, import.meta.url);
       assert.ok(existsSync(file), `file hilang: ${u}`);
     }
+  }
+});
+
+test('@font-face: font-display swap dan tanpa URL http(s)', () => {
+  const faces = [...css.matchAll(/@font-face\s*\{[^}]*\}/g)].map((m) => m[0]);
+  for (const face of faces) {
+    assert.match(face, /font-display:\s*swap\s*;/);
+    assert.doesNotMatch(face, /url\(\s*["']?(https?:)?\/\//);
   }
 });

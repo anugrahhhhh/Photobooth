@@ -73,19 +73,19 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.1; margin: 0 0 .5e
   transition: transform .1s ease, box-shadow .1s ease, background-color .15s ease;
   -webkit-tap-highlight-color: transparent;
 }
-.btn:hover { background: var(--primary-soft); }
+.btn:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--primary-soft); }
 [data-skin="fun"] .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--line); }
 .btn:disabled, .btn[aria-disabled="true"] { opacity: .5; cursor: not-allowed; transform: none; }
 
 .btn-primary { background: var(--primary); color: var(--on-primary); }
-.btn-primary:hover { background: var(--primary); filter: brightness(1.06); }
+.btn-primary:hover:not(:disabled) { background: var(--primary); filter: brightness(1.06); }
 [data-skin="clean"] .btn-primary { border-color: var(--primary); }
 
 .btn-secondary { background: var(--surface); color: var(--text); }
 
 .btn-danger { background: var(--surface); color: var(--primary); border-color: var(--primary); }
 [data-skin="fun"] .btn-danger { color: var(--text); border-color: var(--line); }
-.btn-danger:hover { background: var(--primary); color: var(--on-primary); }
+.btn-danger:hover:not(:disabled) { background: var(--primary); color: var(--on-primary); }
 
 .btn-icon { padding: 0; width: var(--tap); }
 .btn-lg { min-height: var(--tap-lg); padding: 0 28px; font-size: 18px; }
@@ -117,7 +117,7 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.1; margin: 0 0 .5e
   border-radius: 999px;
   cursor: pointer;
 }
-.chip:hover { background: var(--primary-soft); }
+.chip:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--primary-soft); }
 .chip[aria-pressed="true"] {
   background: var(--accent);
   color: var(--on-accent);
@@ -316,10 +316,9 @@ textarea.input { min-height: calc(var(--tap) * 2); resize: vertical; }
 
 /* Focus: visible on every interactive element */
 :focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
-[data-skin="fun"][data-theme="dark"] :focus-visible { outline-color: var(--sun); }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
