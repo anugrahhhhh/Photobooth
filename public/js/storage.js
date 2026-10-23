@@ -6,6 +6,7 @@ export const KEYS = {
   sound: 'pb.sound',
   kioskLang: 'pb.kioskLang',
   cameraId: 'pb.cameraId',
+  mirror: 'pb.mirror',
 };
 
 export function read(key, store = globalThis.localStorage) {

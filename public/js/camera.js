@@ -23,7 +23,7 @@ export function cameraErrorMessage(err) {
   }
 }
 
-// Kamera depan/webcam → pratinjau dicermin, dan hasil boleh dicermin bila mirror_output = 1.
+// Kamera depan/webcam → pratinjau dan hasil dicermin sesuai tombol Cermin (default dari mirror_default).
 export function isFrontCamera({ facingRequested, reportedFacing, pickedByDeviceId = false, isTouch = false }) {
   if (reportedFacing) return reportedFacing === 'user';
   if (pickedByDeviceId && !isTouch) return true;

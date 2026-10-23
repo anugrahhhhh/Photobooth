@@ -286,3 +286,5 @@ body.kiosk .welcome-kiosk {
 }
 .welcome-caption { margin: 0; color: var(--muted); font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .welcome-slides img { transition: none; } }
+#mirror-toggle { min-height: 44px; }
+#mirror-toggle[aria-pressed="true"] { background: var(--primary); color: #fff; border-color: var(--primary); }

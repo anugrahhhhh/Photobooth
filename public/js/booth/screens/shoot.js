@@ -7,6 +7,8 @@ import { overlayLayout, applyOverlay } from '../overlay.js';
 import { nextEmptySlot, releaseCanvas } from '../../state.js';
 import { beep, shutter } from '../../sound.js';
 import { shouldReview } from '../review-timer.js';
+import { initialMirror } from '../mirror.js';
+import { KEYS, read, write } from '../../storage.js';
 
 export const MAX_PHOTO_SIDE = 1920;
 export const NEXT_SHOT_DELAY_MS = 800;
@@ -19,6 +21,7 @@ let cameraReady = false;
 let autoPending = false;
 let runToken = null;
 let importing = false;
+let mirrorOn = false;
 const restartPolicy = createRestartPolicy(3);
 
 const currentSlot = () => ctxRef.session.target ?? nextEmptySlot(ctxRef.state);
@@ -40,6 +43,26 @@ function frontCamera() {
     pickedByDeviceId: cameraInfo?.pickedByDeviceId,
     isTouch: IS_TOUCH,
   });
+}
+
+export function isMirrored() {
+  return mirrorOn;
+}
+
+// Dihitung ulang tiap kamera berganti; untuk kamera belakang tombol disembunyikan.
+function syncMirror() {
+  const front = Boolean(cameraInfo) && frontCamera();
+  mirrorOn = initialMirror({
+    front,
+    stored: read(KEYS.mirror),
+    settingDefault: ctxRef.settings?.mirror_default ?? 1,
+  });
+  $('#mirror-toggle').hidden = !front;
+}
+
+function renderMirrorView() {
+  $('#video').classList.toggle('mirror', mirrorOn);
+  $('#mirror-toggle').setAttribute('aria-pressed', String(mirrorOn));
 }
 
 function renderSlotLabel() {
@@ -66,7 +89,7 @@ function updateView() {
       return el('li', { className: `shoot-dot ${cls}`.trim() });
     }),
   );
-  $('#video').classList.toggle('mirror', Boolean(cameraInfo) && frontCamera());
+  renderMirrorView();
   syncControls();
 }
 
@@ -110,6 +133,7 @@ async function startCamera(pref) {
     cameraInfo = { ...info, pickedByDeviceId: Boolean(usePref.deviceId) && !info.usedFallback };
     restartPolicy.success();
     cameraReady = true;
+    syncMirror();
     if (onShoot()) updateView();
     await refreshCameraList();
     if (onShoot() && autoPending) {
@@ -119,6 +143,7 @@ async function startCamera(pref) {
   } catch (err) {
     setCameraSwitching(false);
     cameraInfo = null;
+    syncMirror();
     autoPending = false;
     showCameraError(cameraErrorMessage(err));
   }
@@ -195,8 +220,7 @@ async function runSequence() {
       }
       flash();
       shutter();
-      const mirror = ctx.settings.mirror_output === 1 && frontCamera();
-      setPhoto(ctx, slot, camera.capture($('#video'), MAX_PHOTO_SIDE, { mirror }));
+      setPhoto(ctx, slot, camera.capture($('#video'), MAX_PHOTO_SIDE, { mirror: isMirrored() }));
       if (shouldReview(ctx.settings.review_seconds, 'camera')) {
         const target = ctx.session.target;
         runToken = null;
@@ -306,6 +330,11 @@ export function init(ctx) {
   $('#camera-retry').addEventListener('click', () => {
     restartPolicy.success();
     startCamera();
+  });
+  $('#mirror-toggle').addEventListener('click', () => {
+    mirrorOn = !mirrorOn;
+    write(KEYS.mirror, mirrorOn ? '1' : '0');
+    renderMirrorView();
   });
   $('#flip').addEventListener('click', async () => {
     const { state } = ctx;

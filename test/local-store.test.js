@@ -20,7 +20,7 @@ function mapStore() {
 test('KEYS memuat semua kunci pb.*', () => {
   assert.deepEqual(KEYS, {
     theme: 'pb.theme', lang: 'pb.lang', kiosk: 'pb.kiosk',
-    sound: 'pb.sound', kioskLang: 'pb.kioskLang', cameraId: 'pb.cameraId',
+    sound: 'pb.sound', kioskLang: 'pb.kioskLang', cameraId: 'pb.cameraId', mirror: 'pb.mirror',
   });
 });
 

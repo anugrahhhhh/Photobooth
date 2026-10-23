@@ -32,6 +32,7 @@ export default {
   'booth.shoot.cancel': 'Cancel',
   'booth.shoot.flip': 'Flip camera',
   'booth.shoot.fullscreen': 'Fullscreen',
+  'booth.shoot.mirror': 'Mirror',
   'booth.shoot.gallery': 'Upload from gallery',
   'booth.shoot.galleryPick': 'Choose from gallery',
   'booth.shoot.toAdjust': 'Done',

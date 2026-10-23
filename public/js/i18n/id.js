@@ -32,6 +32,7 @@ export default {
   'booth.shoot.cancel': 'Batal',
   'booth.shoot.flip': 'Balik kamera',
   'booth.shoot.fullscreen': 'Layar penuh',
+  'booth.shoot.mirror': 'Cermin',
   'booth.shoot.gallery': 'Unggah dari galeri',
   'booth.shoot.galleryPick': 'Pilih dari galeri',
   'booth.shoot.toAdjust': 'Selesai',
