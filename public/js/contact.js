@@ -1,7 +1,7 @@
 // Normalisasi dan masking kontak. Murni, dipakai bersama browser dan server.
 
 const PHONE_RE = /^[1-9]\d{9,14}$/;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_RE = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,}$/;
 const MAX_EMAIL = 254;
 
 // Buang semua selain angka. Awalan 00 dibuang, awalan 0 jadi 62, 0 tunggal setelah 62 dibuang. Hasil harus cocok PHONE_RE.

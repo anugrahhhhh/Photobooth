@@ -40,3 +40,10 @@ test('normalizePhone menangani (0) setelah kode negara dan awalan 00', () => {
   assert.equal(normalizePhone('+62 (0)812 3456 7890'), '6281234567890');
   assert.equal(normalizePhone('0062 812 3456 7890'), '6281234567890');
 });
+
+test('isValidEmail menolak karakter yang membuat daftar alamat', () => {
+  for (const bad of ['a,b@c.com', 'x@y.com;z@w.com', '"a"@b.com', '<a@b.com>', 'a@b.com, c@d.com', 'a b@c.com', 'a@b']) {
+    assert.equal(isValidEmail(bad), false, bad);
+  }
+  assert.equal(isValidEmail('rina.putri+booth@gmail.com'), true);
+});

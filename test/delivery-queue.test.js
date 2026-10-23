@@ -149,3 +149,20 @@ test('stats7d menghitung sent dan failed 7 hari terakhir', async () => {
   advance(8 * 864e5);
   assert.deepEqual(q.stats7d(), { sent: 0, failed: 0 });
 });
+
+test('rahasia yang melintasi batas 200 karakter tetap tersamar', async () => {
+  const secret = 'SECRETPASS123';
+  behavior = () => { throw new Error('x'.repeat(195) + secret); };
+  const q = mk({ secrets: [secret] });
+  q.enqueue(row, 'email', 'a@b.com');
+  await q.tick();
+  assert.ok(!get().last_error.includes(secret.slice(0, 6)));
+});
+
+test('last_error tidak memuat alamat penerima', async () => {
+  behavior = () => { throw new Error('550 rejected <rina@x.com>'); };
+  const q = mk();
+  q.enqueue(row, 'email', 'rina@x.com');
+  await q.tick();
+  assert.ok(!get().last_error.includes('rina@x.com'));
+});
