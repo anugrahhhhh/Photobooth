@@ -137,4 +137,21 @@ export default {
   'booth.welcome.soundOff': "Suara mati",
   'booth.welcome.lang.id': "Bahasa: Indonesia",
   'booth.welcome.lang.en': "Bahasa: English",
+
+  "result.loading": "Memuat...",
+  "result.title": "Foto kamu siap!",
+  "result.expiry": "Tersedia sampai {date}",
+  "result.photo.alt": "Foto kamu",
+  "result.gif.alt": "GIF kamu",
+  
+  "result.preparing": "Sedang disiapkan...",
+  "result.download.photo": "Unduh foto",
+  "result.download.gif": "Unduh GIF",
+  "result.download.video": "Unduh video",
+  "result.share.whatsapp": "Kirim ke WhatsApp",
+  "result.share.native": "Bagikan",
+  "result.share.text": "Lihat foto kita dari photobooth!",
+  "result.deleted": "Foto ini sudah dihapus otomatis setelah 7 hari.",
+  "result.notFound": "Link tidak ditemukan.",
+  "result.error": "Gagal memuat halaman. Coba muat ulang.",
 };

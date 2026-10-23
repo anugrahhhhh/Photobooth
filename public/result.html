@@ -1,1 +1,58 @@
-<!doctype html><meta name="robots" content="noindex"><title>Photobooth</title>
+<!doctype html>
+<html lang="id" data-skin="fun">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#FF5A4E" />
+    <title>Photobooth</title>
+    <script src="/js/theme-boot.js"></script>
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/result.css" />
+    <script type="module" src="/js/result-page.js"></script>
+  </head>
+  <body class="result-app">
+    <header class="result-header">
+      <span class="result-brand" id="brand">Photobooth</span>
+      <div class="result-tools">
+        <button type="button" class="btn btn-icon" id="theme-toggle"></button>
+        <label class="visually-hidden" for="lang-select" data-i18n="common.language">Bahasa</label>
+        <select id="lang-select" class="input">
+          <option value="id">Indonesia</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+    </header>
+
+    <main class="result-main">
+      <p class="status-msg" id="state-msg" role="status" data-i18n="result.loading">Memuat...</p>
+
+      <div id="content" hidden>
+        <h1 class="display result-title" data-i18n="result.title">Foto kamu siap!</h1>
+        <p class="result-expiry" id="expiry"></p>
+
+        <section class="card result-item" id="photo-item">
+          <img id="photo-img" alt="" data-i18n-attr="alt:result.photo.alt" />
+          <a class="btn btn-primary" id="photo-download" data-i18n="result.download.photo">Unduh foto</a>
+        </section>
+
+        <section class="card result-item" id="gif-item">
+          <img id="gif-img" alt="" data-i18n-attr="alt:result.gif.alt" hidden />
+          <p class="status-msg" id="gif-wait" data-i18n="result.preparing">Sedang disiapkan...</p>
+          <a class="btn btn-primary" id="gif-download" data-i18n="result.download.gif" hidden>Unduh GIF</a>
+        </section>
+
+        <section class="card result-item" id="video-item" hidden>
+          <video id="video-el" controls playsinline preload="metadata"></video>
+          <a class="btn btn-primary" id="video-download" data-i18n="result.download.video">Unduh video</a>
+        </section>
+
+        <div class="result-share">
+          <a class="btn btn-secondary" id="wa-share" target="_blank" rel="noopener" data-i18n="result.share.whatsapp">Kirim ke WhatsApp</a>
+          <button type="button" class="btn btn-secondary" id="native-share" data-i18n="result.share.native" hidden>Bagikan</button>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

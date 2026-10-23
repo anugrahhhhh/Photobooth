@@ -137,4 +137,21 @@ export default {
   'booth.welcome.soundOff': "Sound off",
   'booth.welcome.lang.id': "Language: Indonesian",
   'booth.welcome.lang.en': "Language: English",
+
+  "result.loading": "Loading...",
+  "result.title": "Your photos are ready!",
+  "result.expiry": "Available until {date}",
+  "result.photo.alt": "Your photo",
+  "result.gif.alt": "Your GIF",
+  
+  "result.preparing": "Getting it ready...",
+  "result.download.photo": "Download photo",
+  "result.download.gif": "Download GIF",
+  "result.download.video": "Download video",
+  "result.share.whatsapp": "Send to WhatsApp",
+  "result.share.native": "Share",
+  "result.share.text": "Check out our photobooth photos!",
+  "result.deleted": "This photo was deleted automatically after 7 days.",
+  "result.notFound": "Link not found.",
+  "result.error": "Could not load the page. Try reloading.",
 };

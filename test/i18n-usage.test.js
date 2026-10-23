@@ -33,7 +33,7 @@ function htmlKeys(html) {
 
 test('semua kunci yang dipakai di HTML dan JS ada di id.js', () => {
   const used = new Map(); // kunci -> sumber
-  for (const file of ['index.html', 'booth.html']) {
+  for (const file of ['index.html', 'booth.html', 'result.html']) {
     const full = join(root, file);
     if (!existsSync(full)) continue;
     for (const k of htmlKeys(readFileSync(full, 'utf8'))) used.set(k, file);
