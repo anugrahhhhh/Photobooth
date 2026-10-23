@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import request from 'supertest';
 import { makeTestApp, loginAgent, mutate } from './helpers.js';
 
-const DEFAULTS = { countdown_seconds: 3, mirror_output: 0, kiosk_idle_seconds: 90, review_seconds: 3, sound_default: 1 };
+const DEFAULTS = { countdown_seconds: 3, mirror_default: 1, kiosk_idle_seconds: 90, review_seconds: 3, sound_default: 1, contact_before: 0, video_enabled: 0 };
 
 let ctx;
 let agent;
@@ -25,8 +25,8 @@ test('PUT parsial → 200 dengan pengaturan lengkap; kunci lain tetap', async ()
   assert.equal(res.status, 200);
   assert.deepEqual(res.body, { ...DEFAULTS, countdown_seconds: 5 });
   assert.deepEqual(await current(), { ...DEFAULTS, countdown_seconds: 5, kiosk_available: false });
-  assert.equal((await put({ mirror_output: 1 })).body.mirror_output, 1);
-  assert.deepEqual(await current(), { ...DEFAULTS, countdown_seconds: 5, mirror_output: 1, kiosk_available: false });
+  assert.equal((await put({ mirror_default: 0 })).body.mirror_default, 0);
+  assert.deepEqual(await current(), { ...DEFAULTS, countdown_seconds: 5, mirror_default: 0, kiosk_available: false });
 });
 
 test('PUT kunci tak dikenal → 400, kunci valid di body yang sama tidak ditulis', async () => {
@@ -42,9 +42,11 @@ test('PUT nilai di luar rentang atau bukan bilangan bulat → 422, tidak ada yan
     { countdown_seconds: 11 },
     { countdown_seconds: 2.5 },
     { countdown_seconds: '5' },
-    { mirror_output: 2 },
-    { mirror_output: true },
-    { mirror_output: 1, countdown_seconds: 99 },
+    { mirror_default: 2 },
+    { mirror_default: true },
+    { mirror_default: 1, countdown_seconds: 99 },
+    { contact_before: 2 },
+    { video_enabled: -1 },
     { kiosk_idle_seconds: 29 },
     { kiosk_idle_seconds: 601 },
     { review_seconds: -1 },
@@ -60,6 +62,16 @@ test('PUT batas bawah/atas pengaturan baru → 200', async () => {
   for (const body of [{ kiosk_idle_seconds: 30 }, { review_seconds: 0 }, { sound_default: 0 }]) {
     assert.equal((await put(body)).status, 200, JSON.stringify(body));
   }
+});
+
+test('PUT mirror_output (dihapus) → 400', async () => {
+  assert.equal((await put({ mirror_output: 1 })).status, 400);
+});
+
+test('PUT mirror_default, contact_before, video_enabled → 200 dan tersimpan', async () => {
+  const res = await put({ mirror_default: 0, contact_before: 1, video_enabled: 1 });
+  assert.equal(res.status, 200);
+  assert.deepEqual(await current(), { ...DEFAULTS, mirror_default: 0, contact_before: 1, video_enabled: 1, kiosk_available: false });
 });
 
 test('PUT kunci prototipe → 400, pengaturan tidak berubah', async () => {

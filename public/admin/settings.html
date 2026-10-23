@@ -23,14 +23,28 @@
               <input id="countdown_seconds" class="input" name="countdown_seconds" type="number" min="1" max="10" step="1" required />
             </div>
             <label class="check">
-              <input name="mirror_output" type="checkbox" class="switch" role="switch" />
-              Cerminkan hasil foto kamera depan
+              <input name="mirror_default" type="checkbox" class="switch" role="switch" />
+              Cermin default (kamera depan)
             </label>
             <div class="field">
               <label for="review_seconds">Waktu tinjau (detik)</label>
               <input id="review_seconds" class="input" name="review_seconds" type="number" min="0" max="10" step="1" required />
               <span class="hint">0 = tanpa tinjau</span>
             </div>
+          </div>
+        </section>
+
+        <section class="card section">
+          <h2>Hasil &amp; Kirim</h2>
+          <div class="settings-form">
+            <label class="check">
+              <input name="contact_before" type="checkbox" class="switch" role="switch" />
+              Minta kontak sebelum foto
+            </label>
+            <label class="check">
+              <input name="video_enabled" type="checkbox" class="switch" role="switch" />
+              Aktifkan video
+            </label>
           </div>
         </section>
 

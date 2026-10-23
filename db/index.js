@@ -4,10 +4,12 @@ import Database from 'better-sqlite3';
 
 export const SETTINGS_SCHEMA = {
   countdown_seconds: { min: 1, max: 10, default: 3 },
-  mirror_output: { min: 0, max: 1, default: 0 },
+  mirror_default: { min: 0, max: 1, default: 1 },
   kiosk_idle_seconds: { min: 30, max: 600, default: 90 },
   review_seconds: { min: 0, max: 10, default: 3 },
   sound_default: { min: 0, max: 1, default: 1 },
+  contact_before: { min: 0, max: 1, default: 0 },
+  video_enabled: { min: 0, max: 1, default: 0 },
 };
 
 const SCHEMA = `

@@ -21,10 +21,12 @@ const SCREENS = { welcome, pick, shoot, review, adjust, result };
 const STEPS = ['pick', 'shoot', 'adjust', 'result'];
 const DEFAULT_SETTINGS = {
   countdown_seconds: 3,
-  mirror_output: 0,
+  mirror_default: 1,
   kiosk_idle_seconds: 90,
   review_seconds: 3,
   sound_default: 1,
+  contact_before: 0,
+  video_enabled: 0,
 };
 
 const IDLE_WARN_MS = 10_000;

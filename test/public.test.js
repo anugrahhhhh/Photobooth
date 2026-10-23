@@ -79,10 +79,12 @@ test('GET /api/settings publik tanpa login', async () => {
   assert.equal(res.status, 200);
   assert.deepEqual(res.body, {
     countdown_seconds: 3,
-    mirror_output: 0,
+    mirror_default: 1,
     kiosk_idle_seconds: 90,
     review_seconds: 3,
     sound_default: 1,
+    contact_before: 0,
+    video_enabled: 0,
     kiosk_available: false,
   });
 });

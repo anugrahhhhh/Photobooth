@@ -13,10 +13,12 @@ export async function init() {
 
   const fill = (s) => {
     form.countdown_seconds.value = s.countdown_seconds;
-    form.mirror_output.checked = s.mirror_output === 1;
+    form.mirror_default.checked = s.mirror_default === 1;
     form.review_seconds.value = s.review_seconds;
     form.kiosk_idle_seconds.value = s.kiosk_idle_seconds;
     form.sound_default.checked = s.sound_default === 1;
+    form.contact_before.checked = s.contact_before === 1;
+    form.video_enabled.checked = s.video_enabled === 1;
   };
 
   // Status PIN dari kiosk_available; PIN-nya sendiri tidak pernah dikirim ke klien.
@@ -49,10 +51,12 @@ export async function init() {
       fill(
         await adminApi.json('PUT', '/api/admin/settings', {
           countdown_seconds: Number(form.countdown_seconds.value),
-          mirror_output: form.mirror_output.checked ? 1 : 0,
+          mirror_default: form.mirror_default.checked ? 1 : 0,
           review_seconds: Number(form.review_seconds.value),
           kiosk_idle_seconds: Number(form.kiosk_idle_seconds.value),
           sound_default: form.sound_default.checked ? 1 : 0,
+          contact_before: form.contact_before.checked ? 1 : 0,
+          video_enabled: form.video_enabled.checked ? 1 : 0,
         }),
       );
       setStatus(status, 'Pengaturan tersimpan', 'ok');

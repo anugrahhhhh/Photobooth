@@ -90,14 +90,14 @@ test('resetAll melepas semua canvas dan mengosongkan template serta filter', () 
   const s = withPhotos(2);
   const photos = [...s.photos];
   s.filter = 'bw';
-  s.settings = { countdown_seconds: 3, mirror_output: 0 };
+  s.settings = { countdown_seconds: 3, mirror_default: 0 };
   resetAll(s);
   assert.ok(photos.every((p) => p.width === 0));
   assert.equal(s.template, null);
   assert.deepEqual(s.photos, []);
   assert.deepEqual(s.transforms, []);
   assert.equal(s.filter, 'normal');
-  assert.deepEqual(s.settings, { countdown_seconds: 3, mirror_output: 0 }, 'pengaturan tetap');
+  assert.deepEqual(s.settings, { countdown_seconds: 3, mirror_default: 0 }, 'pengaturan tetap');
 });
 
 test('latestOnly: hanya permintaan terakhir yang masih berlaku', async () => {
