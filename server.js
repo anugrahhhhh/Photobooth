@@ -16,6 +16,8 @@ import { sessionsRouter, adminStatsRouter } from './routes/stats.js';
 import { publicSettingsRouter, adminSettingsRouter } from './routes/settings.js';
 import { kioskAdminRouter, kioskPublicRouter } from './routes/kiosk.js';
 import { requireAdmin } from './middleware/requireAdmin.js';
+import { resultsApiRouter, resultFilesRouter, resultPageHandler } from './routes/results.js';
+import { createResultsStore } from './lib/results-store.js';
 import { checkOrigin } from './middleware/checkOrigin.js';
 
 const SqliteStore = SqliteStoreFactory(session);
@@ -41,10 +43,22 @@ function noStore(req, res, next) {
   next();
 }
 
-export function createApp({ config, db, storage, now = () => new Date(), extraRoutes }) {
+export function createApp({ config, db, storage, now = () => new Date(), extraRoutes, resultsStatfs }) {
   const app = express();
   app.locals.now = now;
   app.locals.db = db;
+  const results = createResultsStore({
+    db,
+    uploadDir: config.uploadDir,
+    now,
+    ...(resultsStatfs && { statfs: resultsStatfs }),
+  });
+  app.locals.results = results;
+  if (config.nodeEnv !== 'test') {
+    const runCleanup = () => results.cleanup().catch((err) => console.warn(`Pembersihan hasil gagal: ${err.message}`));
+    runCleanup();
+    setInterval(runCleanup, 60 * 60_000).unref();
+  }
 
   if (config.isProd) app.set('trust proxy', 1);
 
@@ -81,6 +95,8 @@ export function createApp({ config, db, storage, now = () => new Date(), extraRo
   );
   app.get(['/admin', '/admin/'], (req, res) => res.redirect('/admin/dashboard.html'));
   app.get('/booth', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'booth.html')));
+  app.get('/p/:token', resultPageHandler(PUBLIC_DIR));
+  app.use('/r', resultFilesRouter({ store: results }));
   app.use(express.static(PUBLIC_DIR));
 
   app.get('/healthz', (req, res) => {
@@ -110,6 +126,7 @@ export function createApp({ config, db, storage, now = () => new Date(), extraRo
   app.use('/api/sessions', sessionsRouter({ db }));
   app.use('/api/settings', publicSettingsRouter({ db }));
   app.use('/api/kiosk', noStore, checkOrigin, kioskPublicRouter({ db }));
+  app.use('/api/results', noStore, checkOrigin, resultsApiRouter({ store: results }));
 
   extraRoutes?.(app);
 

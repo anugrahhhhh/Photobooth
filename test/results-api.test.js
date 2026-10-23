@@ -1,0 +1,187 @@
+import { test, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import request from 'supertest';
+import { makeTestApp, mutate, listDir } from './helpers.js';
+
+const THUMB = fs.readFileSync(new URL('./fixtures/thumb.jpg', import.meta.url));
+const GIF = Buffer.from('GIF89a-data-data');
+const WEBM = Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 1, 2, 3, 4, 5, 6, 7, 8]);
+const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0]);
+const START = new Date('2026-10-23T00:00:00Z');
+
+let t, clock;
+before(async () => {
+  clock = START;
+  t = await makeTestApp({ now: () => clock });
+});
+after(() => t.cleanup());
+
+const resultsDir = () => path.join(t.uploadDir, 'results');
+const post = (photo = THUMB, fields = { consent: '1', lang: 'id' }) => {
+  let req = mutate(request(t.app).post('/api/results'));
+  for (const [k, v] of Object.entries(fields)) req = req.field(k, v);
+  return photo ? req.attach('photo', photo, 'photo.jpg') : req;
+};
+const create = async () => (await post()).body;
+const putAsset = (token, key, kind, body, type) => {
+  let req = mutate(request(t.app).put(`/api/results/${token}/${kind}`)).set('Content-Type', type);
+  if (key) req = req.set('X-Result-Key', key);
+  return req.send(body);
+};
+
+test('POST membuat hasil dan url berakhiran /p/<token>', async () => {
+  const res = await post();
+  assert.equal(res.status, 201);
+  assert.match(res.body.token, /^[A-Za-z0-9_-]{22}$/);
+  assert.ok(res.body.key);
+  assert.equal(res.body.url, `http://booth.test/p/${res.body.token}`);
+  assert.ok(res.body.expires_at);
+});
+
+test('POST ditolak: tanpa consent 422, PNG 422, tanpa foto 422, tanpa Origin 403; tanpa sisa folder', async () => {
+  const before = listDir(resultsDir()).length;
+  assert.equal((await post(THUMB, { lang: 'id' })).status, 422);
+  assert.equal((await post(PNG)).status, 422);
+  assert.equal((await post(null)).status, 422);
+  const noOrigin = await request(t.app)
+    .post('/api/results')
+    .set('Host', 'booth.test')
+    .field('consent', '1')
+    .attach('photo', THUMB, 'p.jpg');
+  assert.equal(noOrigin.status, 403);
+  assert.equal(listDir(resultsDir()).length, before);
+});
+
+test('POST foto 8 MB + 1 -> 413', async () => {
+  const big = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff]), Buffer.alloc(8 * 1024 * 1024 - 2)]);
+  assert.equal(big.length, 8 * 1024 * 1024 + 1);
+  const before = listDir(resultsDir()).length;
+  assert.equal((await post(big)).status, 413);
+  assert.equal(listDir(resultsDir()).length, before);
+});
+
+test('POST saat disk penuh -> 507 tanpa sisa', async () => {
+  const full = await makeTestApp({ resultsStatfs: async () => ({ bsize: 4096, blocks: 262144, bavail: 10 }) });
+  try {
+    const res = await mutate(request(full.app).post('/api/results'))
+      .field('consent', '1')
+      .attach('photo', THUMB, 'p.jpg');
+    assert.equal(res.status, 507);
+    assert.deepEqual(listDir(path.join(full.uploadDir, 'results')), []);
+  } finally {
+    full.cleanup();
+  }
+});
+
+test('PUT gif: kunci benar 204 lalu GET memuat gif_url', async () => {
+  const { token, key } = await create();
+  assert.equal((await putAsset(token, key, 'gif', GIF, 'image/gif')).status, 204);
+  const res = await request(t.app).get(`/api/results/${token}`);
+  assert.equal(res.status, 200);
+  assert.equal(res.body.gif_url, `/r/${token}/anim.gif`);
+});
+
+test('PUT: kunci salah 403, tanpa kunci 403, body bukan GIF 422', async () => {
+  const { token, key } = await create();
+  assert.equal((await putAsset(token, 'salah', 'gif', GIF, 'image/gif')).status, 403);
+  assert.equal((await putAsset(token, null, 'gif', GIF, 'image/gif')).status, 403);
+  assert.equal((await putAsset(token, key, 'gif', Buffer.from('bukan gif sama sekali'), 'image/gif')).status, 422);
+  assert.equal((await putAsset(token, key, 'video', GIF, 'video/webm')).status, 422);
+});
+
+test('PUT video webm 204 dan video_type webm', async () => {
+  const { token, key } = await create();
+  assert.equal((await putAsset(token, key, 'video', WEBM, 'video/webm')).status, 204);
+  const res = await request(t.app).get(`/api/results/${token}`);
+  assert.equal(res.body.video_type, 'webm');
+  assert.equal(res.body.video_url, `/r/${token}/video.webm`);
+});
+
+test('GET: token acak valid 404, respons tidak memuat key/key_hash', async () => {
+  assert.equal((await request(t.app).get('/api/results/AAAAAAAAAAAAAAAAAAAAAA')).status, 404);
+  const { token } = await create();
+  const res = await request(t.app).get(`/api/results/${token}`);
+  assert.equal(res.status, 200);
+  assert.ok(!/key/i.test(JSON.stringify(res.body)));
+  assert.equal(res.body.photo_url, `/r/${token}/photo.jpg`);
+});
+
+test('hasil kedaluwarsa -> 410 di GET, PUT, dan file', async () => {
+  const { token, key } = await create();
+  await putAsset(token, key, 'gif', GIF, 'image/gif');
+  clock = new Date(START.getTime() + 7 * 86400_000 + 1000);
+  try {
+    assert.equal((await request(t.app).get(`/api/results/${token}`)).status, 410);
+    assert.equal((await putAsset(token, key, 'gif', GIF, 'image/gif')).status, 410);
+    assert.equal((await putAsset(token, key, 'video', WEBM, 'video/webm')).status, 410);
+    assert.equal((await request(t.app).get(`/r/${token}/photo.jpg`)).status, 410);
+    assert.equal((await request(t.app).get(`/api/results/${token}/qr.svg`)).status, 410);
+  } finally {
+    clock = START;
+  }
+});
+
+test('file: photo.jpg header, download, nama tak dikenal 404', async () => {
+  const { token } = await create();
+  const res = await request(t.app).get(`/r/${token}/photo.jpg`);
+  assert.equal(res.status, 200);
+  assert.match(res.headers['content-type'], /image\/jpeg/);
+  assert.match(res.headers['cache-control'], /private/);
+  assert.equal(res.headers['x-robots-tag'], 'noindex');
+  const dl = await request(t.app).get(`/r/${token}/photo.jpg?download=1`);
+  assert.match(dl.headers['content-disposition'], /attachment/);
+  assert.equal((await request(t.app).get(`/r/${token}/secret.txt`)).status, 404);
+  assert.equal((await request(t.app).get(`/r/${token}/..%2Fx`)).status, 404);
+  assert.equal((await request(t.app).get(`/r/${token}/../x`)).status, 404);
+  assert.equal((await request(t.app).get(`/r/${token}/anim.gif`)).status, 404);
+  assert.equal((await request(t.app).get('/r/pendek/photo.jpg')).status, 404);
+});
+
+test('video mendukung Range -> 206', async () => {
+  const { token, key } = await create();
+  await putAsset(token, key, 'video', WEBM, 'video/webm');
+  const res = await request(t.app).get(`/r/${token}/video.webm`).set('Range', 'bytes=0-3');
+  assert.equal(res.status, 206);
+  assert.equal(res.headers['content-range'], `bytes 0-3/${WEBM.length}`);
+});
+
+test('qr.svg -> 200 image/svg+xml', async () => {
+  const { token } = await create();
+  const res = await request(t.app)
+    .get(`/api/results/${token}/qr.svg`)
+    .buffer(true)
+    .parse((r, cb) => {
+      let d = '';
+      r.on('data', (c) => (d += c));
+      r.on('end', () => cb(null, d));
+    });
+  assert.equal(res.status, 200);
+  assert.match(res.headers['content-type'], /image\/svg\+xml/);
+  assert.match(res.body, /<svg/);
+});
+
+test('halaman /p/:token: valid 200 HTML, tidak valid 404', async () => {
+  const { token } = await create();
+  const ok = await request(t.app).get(`/p/${token}`);
+  assert.equal(ok.status, 200);
+  assert.match(ok.headers['content-type'], /html/);
+  assert.equal(ok.headers['x-robots-tag'], 'noindex');
+  assert.equal((await request(t.app).get('/p/abc')).status, 404);
+});
+
+test('batas laju: permintaan ke-61 dalam 10 menit -> 429', async () => {
+  const lt = await makeTestApp();
+  try {
+    const tiny = Buffer.from([0xff, 0xd8, 0xff, 0xe0]);
+    let last;
+    for (let i = 0; i < 61; i++) {
+      last = await mutate(request(lt.app).post('/api/results')).field('consent', '1').attach('photo', tiny, 'p.jpg');
+      if (i < 60) assert.equal(last.status, 201, `permintaan ${i + 1}`);
+    }
+    assert.equal(last.status, 429);
+  } finally {
+    lt.cleanup();
+  }
+});

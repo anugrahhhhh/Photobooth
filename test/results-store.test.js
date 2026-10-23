@@ -105,3 +105,35 @@ test('summary dan removeAll', async () => {
   assert.deepEqual(store.summary(), { count: 0, bytes: 0 });
   assert.equal(fs.readdirSync(path.join(dir, 'results')).length, 0);
 });
+
+test('cleanup tahan gagal per item: yang lain tetap dibersihkan, hanya yang berhasil dihitung', async () => {
+  const failing = [];
+  store = createResultsStore({
+    db,
+    uploadDir: dir,
+    now: () => clock,
+    remove: async (p, o) => {
+      if (failing.some((f) => p.endsWith(f))) throw new Error('EBUSY');
+      return fs.promises.rm(p, o);
+    },
+  });
+  const a = await mk();
+  const b = await mk();
+  failing.push(a.token);
+  clock = new Date('2026-10-30T00:00:01Z');
+  const warn = console.warn;
+  const warnings = [];
+  console.warn = (...args) => warnings.push(args.join(' '));
+  let n;
+  try {
+    n = await store.cleanup();
+  } finally {
+    console.warn = warn;
+  }
+  assert.equal(n, 1);
+  assert.equal(warnings.length, 1);
+  assert.ok(!fs.existsSync(path.dirname(store.filePath(b.token, 'photo.jpg'))));
+  assert.ok(store.get(a.token), 'baris yang gagal dihapus tetap ada untuk dicoba lagi');
+  failing.length = 0;
+  assert.equal(await store.cleanup(), 1);
+});
