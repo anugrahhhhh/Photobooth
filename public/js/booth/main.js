@@ -10,6 +10,7 @@ import { hideToast, initKiosk, isKioskOn, setKioskOn as persistKiosk, showToast 
 import { attachIdle, createIdleTimer } from '../idle.js';
 import { createWakeLock } from '../wake-lock.js';
 import { createResultStore } from './result-store.js';
+import { createShareSession } from './share.js';
 import * as welcome from './screens/welcome.js';
 import * as pick from './screens/pick.js';
 import * as shoot from './screens/shoot.js';
@@ -30,7 +31,7 @@ const DEFAULT_SETTINGS = {
 };
 
 const IDLE_WARN_MS = 10_000;
-const newSession = () => ({ templateImg: null, target: null, selected: 0, pickMode: 'start' });
+const newSession = () => ({ templateImg: null, target: null, selected: 0, pickMode: 'start', consent: false });
 
 function createCtx(settings) {
   const state = createState();
@@ -40,12 +41,15 @@ function createCtx(settings) {
   let kioskOn = isKioskOn();
   const resetHooks = [];
   const photoHooks = [];
+  // hasil di server milik sesi: dibuang bersama reset
+  resetHooks.push(() => ctx.share.reset());
 
   const ctx = {
     state,
     session: newSession(),
     settings,
     result: createResultStore(),
+    share: createShareSession(),
     wakeLock: createWakeLock(),
     kiosk: () => kioskOn,
     // timeout dibaca tiap tick: pengaturan server datang setelah booth dipasang

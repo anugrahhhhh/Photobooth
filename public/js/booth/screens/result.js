@@ -6,6 +6,7 @@ import { releaseCanvas, resetPhotos, logSessionOnce } from '../../state.js';
 import { render } from '../../strip.js';
 import { clearFilteredCache } from './adjust.js';
 import { resultButtonState } from '../result-view.js';
+import { enterPanel, initPanel, leavePanel, setShareReady } from '../share-panel.js';
 
 let phase = 'preparing';
 
@@ -16,6 +17,7 @@ function setPhase(next) {
   btn.dataset.i18n = key; // ikut berganti saat bahasa diubah
   btn.textContent = t(key);
   btn.disabled = disabled;
+  setShareReady(next === 'ready');
 }
 
 function setError(key) {
@@ -119,6 +121,7 @@ export async function download(ctx) {
 }
 
 export function init(ctx) {
+  initPanel(ctx);
   $('#download').addEventListener('click', () => (phase === 'failed' ? enterResult(ctx) : download(ctx)));
   $('#back-to-adjust').addEventListener('click', () => ctx.go('adjust'));
   $('#restart').addEventListener('click', () => {
@@ -139,9 +142,11 @@ export function init(ctx) {
 }
 
 export function enter(ctx) {
+  enterPanel(ctx);
   enterResult(ctx);
 }
 
 export function leave() {
+  leavePanel();
   $('#result-img').removeAttribute('src');
 }

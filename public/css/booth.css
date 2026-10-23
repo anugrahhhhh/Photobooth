@@ -288,3 +288,12 @@ body.kiosk .welcome-kiosk {
 @media (prefers-reduced-motion: reduce) { .welcome-slides img { transition: none; } }
 #mirror-toggle { min-height: 44px; }
 #mirror-toggle[aria-pressed="true"] { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* Panel kirim di layar Hasil */
+.share-panel { display: grid; gap: 10px; justify-items: center; width: 100%; padding-top: 12px; border-top: 1px solid var(--border, rgb(128 128 128 / 30%)); }
+.share-title { margin: 0; font-size: 16px; }
+.share-out { display: grid; gap: 8px; justify-items: center; }
+.result .share-qr-img { width: min(240px, 100%); height: auto; max-height: none; padding: 8px; background: #fff; border-radius: var(--radius); }
+.share-url { margin: 0; font-weight: 700; word-break: break-all; text-align: center; user-select: text; }
+.consent-dialog { width: min(92vw, 360px); }
+.consent-dialog p { margin: 0 0 16px; }

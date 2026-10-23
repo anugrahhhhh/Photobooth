@@ -40,3 +40,23 @@ async function request(method, url, body, { form = false } = {}) {
 export const getJSON = (url) => request('GET', url);
 export const sendJSON = (method, url, body) => request(method, url, body);
 export const sendForm = (method, url, formData) => request(method, url, formData, { form: true });
+
+// Body mentah (GIF/video) dengan header tambahan, mis. X-Result-Key.
+export async function putRaw(url, body, headers = {}) {
+  let res;
+  try {
+    res = await fetch(url, { method: 'PUT', credentials: 'same-origin', headers, body });
+  } catch {
+    throw new ApiError(0, 'Tidak dapat terhubung ke server. Periksa koneksi.');
+  }
+  if (!res.ok) {
+    let data = null;
+    try {
+      data = await res.json();
+    } catch {
+      // respons bukan JSON
+    }
+    throw new ApiError(res.status, data?.error ?? `Permintaan gagal (${res.status})`);
+  }
+  return null;
+}

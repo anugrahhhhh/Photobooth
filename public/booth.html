@@ -83,6 +83,14 @@
       </div>
     </dialog>
 
+    <dialog class="dialog consent-dialog" id="consent-dialog" aria-labelledby="consent-text">
+      <p id="consent-text" data-i18n="booth.share.consent">Foto disimpan di server selama 7 hari agar bisa dikirim ke kamu.</p>
+      <div class="row">
+        <button type="button" class="btn btn-primary" id="consent-agree" data-i18n="booth.share.agree">Setuju</button>
+        <button type="button" class="btn" id="consent-cancel" data-i18n="booth.share.cancel">Batal</button>
+      </div>
+    </dialog>
+
     <main class="booth-main">
       <section data-screen="welcome">
         <div class="inapp-banner card" id="inapp-banner" data-kiosk-hide hidden>
@@ -216,6 +224,19 @@
               <button type="button" id="new-session" class="btn" data-i18n="booth.result.newSession">Sesi baru</button>
             </div>
             <p class="status-msg" id="result-status" role="status"></p>
+            <div class="share-panel" id="share-panel">
+              <h3 class="share-title" data-i18n="booth.share.title">Kirim / Bagikan</h3>
+              <div class="row">
+                <button type="button" class="btn" id="share-qr" disabled data-i18n="booth.share.qr">QR</button>
+                <button type="button" class="btn" id="share-native" hidden data-i18n="booth.share.native">Bagikan</button>
+              </div>
+              <div class="share-out" id="share-out" hidden>
+                <p class="status-msg" id="share-status" role="status"></p>
+                <img id="share-qr-img" class="share-qr-img" width="240" height="240" alt="Kode QR halaman hasil" data-i18n-attr="alt:booth.share.qrAlt" hidden />
+                <p class="share-url" id="share-url" hidden></p>
+                <button type="button" class="btn" id="share-retry" hidden data-i18n="common.retry">Coba lagi</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
