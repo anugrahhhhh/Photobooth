@@ -86,5 +86,7 @@ test('GET /api/settings publik tanpa login', async () => {
     contact_before: 0,
     video_enabled: 0,
     kiosk_available: false,
+    share_email: false,
+    share_whatsapp: false,
   });
 });

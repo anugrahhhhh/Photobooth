@@ -35,3 +35,10 @@ test('respons 400 -> reject berisi status, tanpa token', async () => {
     (e) => /400/.test(e.message) && !e.message.includes('SECRET-TOKEN'),
   );
 });
+
+test('fetch menerima signal timeout', async () => {
+  let init;
+  const fetch = async (u, i) => { init = i; return { ok: true, status: 200 }; };
+  await createWhatsApp(wa, { fetch }).send({ to: '1', photoUrl: 'u', pageUrl: 'p' });
+  assert.ok(init.signal instanceof AbortSignal);
+});

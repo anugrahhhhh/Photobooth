@@ -211,3 +211,94 @@ test('PUT gif 10 MB + 1 -> 413, Content-Type salah -> 422', async () => {
   assert.equal((await putAsset(token, key, 'gif', big, 'image/gif')).status, 413);
   assert.equal((await putAsset(token, key, 'gif', GIF, 'text/plain')).status, 422);
 });
+
+// --- kirim dan daftar kiriman ---
+const sendReq = (app, token, key, body) => {
+  let req = mutate(request(app).post(`/api/results/${token}/send`));
+  if (key) req = req.set('X-Result-Key', key);
+  return req.send(body);
+};
+const createOn = async (app) => {
+  const res = await mutate(request(app).post('/api/results')).field('consent', '1').attach('photo', THUMB, 'p.jpg');
+  return res.body;
+};
+
+test('send email: 202, deliveries berisi alamat tersamar, kontak dinormalisasi', async () => {
+  const s = await makeTestApp({ senders: { email: { send: async () => {} } } });
+  try {
+    const { token, key } = await createOn(s.app);
+    const res = await sendReq(s.app, token, key, { channel: 'email', to: ' Rina@Gmail.com ' });
+    assert.equal(res.status, 202);
+    assert.ok(Number.isInteger(res.body.id));
+    const list = await request(s.app).get(`/api/results/${token}/deliveries`).set('X-Result-Key', key);
+    assert.equal(list.status, 200);
+    assert.deepEqual(list.body, [{ id: res.body.id, channel: 'email', to: 'ri***@gmail.com', status: 'queued' }]);
+    assert.equal(s.db.prepare('SELECT recipient FROM deliveries').get().recipient, 'rina@gmail.com');
+  } finally {
+    s.cleanup();
+  }
+});
+
+test('send: kunci salah 403, email tidak valid 422, WhatsApp tidak aktif 409, token acak 404', async () => {
+  const s = await makeTestApp({ senders: { email: { send: async () => {} } } });
+  try {
+    const { token, key } = await createOn(s.app);
+    assert.equal((await sendReq(s.app, token, 'salah', { channel: 'email', to: 'a@b.com' })).status, 403);
+    assert.equal((await sendReq(s.app, token, null, { channel: 'email', to: 'a@b.com' })).status, 403);
+    assert.equal((await sendReq(s.app, token, key, { channel: 'email', to: 'bukan-email' })).status, 422);
+    assert.equal((await sendReq(s.app, token, key, { channel: 'whatsapp', to: '123' })).status, 422);
+    assert.equal((await sendReq(s.app, token, key, { channel: 'sms', to: 'a@b.com' })).status, 422);
+    assert.equal((await sendReq(s.app, token, key, { channel: 'whatsapp', to: '0812 3456 7890' })).status, 409);
+    assert.equal((await sendReq(s.app, 'A'.repeat(22), key, { channel: 'email', to: 'a@b.com' })).status, 404);
+    assert.equal(s.db.prepare('SELECT COUNT(*) n FROM deliveries').get().n, 0);
+    const list = await request(s.app).get(`/api/results/${token}/deliveries`);
+    assert.equal(list.status, 403);
+  } finally {
+    s.cleanup();
+  }
+});
+
+test('send: kiriman ke-4 -> 429; dua send serentak dengan sisa 1 -> tepat satu 202', async () => {
+  const s = await makeTestApp({ senders: { email: { send: async () => {} } } });
+  try {
+    const { token, key } = await createOn(s.app);
+    const body = { channel: 'email', to: 'a@b.com' };
+    assert.equal((await sendReq(s.app, token, key, body)).status, 202);
+    assert.equal((await sendReq(s.app, token, key, body)).status, 202);
+    assert.equal((await sendReq(s.app, token, key, body)).status, 202);
+    assert.equal((await sendReq(s.app, token, key, body)).status, 429);
+
+    const second = await createOn(s.app);
+    await sendReq(s.app, second.token, second.key, body);
+    await sendReq(s.app, second.token, second.key, body);
+    const both = await Promise.all([
+      sendReq(s.app, second.token, second.key, body),
+      sendReq(s.app, second.token, second.key, body),
+    ]);
+    assert.deepEqual(both.map((r) => r.status).sort(), [202, 429]);
+  } finally {
+    s.cleanup();
+  }
+});
+
+test('send: hasil kedaluwarsa -> 410; pengirim yang selalu gagal berakhir failed di daftar', async () => {
+  let clk = START;
+  const s = await makeTestApp({
+    now: () => clk,
+    senders: { email: { send: async () => { throw new Error('auth'); } } },
+  });
+  try {
+    const { token, key } = await createOn(s.app);
+    await sendReq(s.app, token, key, { channel: 'email', to: 'a@b.com' });
+    for (let i = 0; i < 3; i++) {
+      await s.app.locals.queue.tick();
+      clk = new Date(clk.getTime() + 120_000);
+    }
+    const list = await request(s.app).get(`/api/results/${token}/deliveries`).set('X-Result-Key', key);
+    assert.equal(list.body[0].status, 'failed');
+    clk = new Date(START.getTime() + 8 * 864e5);
+    assert.equal((await sendReq(s.app, token, key, { channel: 'email', to: 'a@b.com' })).status, 410);
+  } finally {
+    s.cleanup();
+  }
+});

@@ -3,9 +3,9 @@ import { HttpError } from '../lib/http-error.js';
 import { getSettings, SETTINGS_SCHEMA } from '../db/index.js';
 import { hasKioskPin } from './kiosk.js';
 
-export function publicSettingsRouter({ db }) {
+export function publicSettingsRouter({ db, services = { email: false, whatsapp: false } }) {
   const router = Router();
-  router.get('/', (req, res) => res.json({ ...getSettings(db), kiosk_available: hasKioskPin(db) }));
+  router.get('/', (req, res) => res.json({ ...getSettings(db), kiosk_available: hasKioskPin(db), share_email: services.email, share_whatsapp: services.whatsapp }));
   return router;
 }
 

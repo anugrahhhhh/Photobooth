@@ -17,16 +17,16 @@ const put = (body) => mutate(agent.put('/api/admin/settings')).send(body);
 const current = async () => (await request(ctx.app).get('/api/settings')).body;
 
 test('GET default semua pengaturan', async () => {
-  assert.deepEqual(await current(), { ...DEFAULTS, kiosk_available: false });
+  assert.deepEqual(await current(), { ...DEFAULTS, kiosk_available: false, share_email: false, share_whatsapp: false });
 });
 
 test('PUT parsial → 200 dengan pengaturan lengkap; kunci lain tetap', async () => {
   const res = await put({ countdown_seconds: 5 });
   assert.equal(res.status, 200);
   assert.deepEqual(res.body, { ...DEFAULTS, countdown_seconds: 5 });
-  assert.deepEqual(await current(), { ...DEFAULTS, countdown_seconds: 5, kiosk_available: false });
+  assert.deepEqual(await current(), { ...DEFAULTS, countdown_seconds: 5, kiosk_available: false, share_email: false, share_whatsapp: false });
   assert.equal((await put({ mirror_default: 0 })).body.mirror_default, 0);
-  assert.deepEqual(await current(), { ...DEFAULTS, countdown_seconds: 5, mirror_default: 0, kiosk_available: false });
+  assert.deepEqual(await current(), { ...DEFAULTS, countdown_seconds: 5, mirror_default: 0, kiosk_available: false, share_email: false, share_whatsapp: false });
 });
 
 test('PUT kunci tak dikenal → 400, kunci valid di body yang sama tidak ditulis', async () => {
@@ -55,7 +55,7 @@ test('PUT nilai di luar rentang atau bukan bilangan bulat → 422, tidak ada yan
   ]) {
     assert.equal((await put(body)).status, 422, JSON.stringify(body));
   }
-  assert.deepEqual(await current(), { ...DEFAULTS, kiosk_available: false });
+  assert.deepEqual(await current(), { ...DEFAULTS, kiosk_available: false, share_email: false, share_whatsapp: false });
 });
 
 test('PUT batas bawah/atas pengaturan baru → 200', async () => {
@@ -71,7 +71,7 @@ test('PUT mirror_output (dihapus) → 400', async () => {
 test('PUT mirror_default, contact_before, video_enabled → 200 dan tersimpan', async () => {
   const res = await put({ mirror_default: 0, contact_before: 1, video_enabled: 1 });
   assert.equal(res.status, 200);
-  assert.deepEqual(await current(), { ...DEFAULTS, mirror_default: 0, contact_before: 1, video_enabled: 1, kiosk_available: false });
+  assert.deepEqual(await current(), { ...DEFAULTS, mirror_default: 0, contact_before: 1, video_enabled: 1, kiosk_available: false, share_email: false, share_whatsapp: false });
 });
 
 test('PUT kunci prototipe → 400, pengaturan tidak berubah', async () => {
@@ -79,7 +79,7 @@ test('PUT kunci prototipe → 400, pengaturan tidak berubah', async () => {
     const res = await mutate(agent.put('/api/admin/settings')).set('Content-Type', 'application/json').send(raw);
     assert.equal(res.status, 400, raw);
   }
-  assert.deepEqual(await current(), { ...DEFAULTS, kiosk_available: false });
+  assert.deepEqual(await current(), { ...DEFAULTS, kiosk_available: false, share_email: false, share_whatsapp: false });
 });
 
 test('kiosk_available true setelah PIN kiosk dipasang', async () => {
@@ -93,4 +93,19 @@ test('PUT body bukan objek → 400', async () => {
 
 test('PUT tanpa login → 401', async () => {
   assert.equal((await mutate(request(ctx.app).put('/api/admin/settings')).send({ countdown_seconds: 5 })).status, 401);
+});
+
+test('GET menyertakan share_email/share_whatsapp dari pengirim; nilai SMTP tidak bocor', async () => {
+  const c = await makeTestApp({
+    env: { SMTP_HOST: 'smtp.test', SMTP_PORT: '587', SMTP_USER: 'u@x.com', SMTP_PASS: 'SECRETPASS' },
+    senders: { email: { send: async () => {} } },
+  });
+  try {
+    const res = await request(c.app).get('/api/settings');
+    assert.equal(res.body.share_email, true);
+    assert.equal(res.body.share_whatsapp, false);
+    assert.ok(!res.text.includes('SECRETPASS') && !res.text.includes('smtp.test'));
+  } finally {
+    c.cleanup();
+  }
 });

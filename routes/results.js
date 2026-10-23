@@ -5,8 +5,10 @@ import QRCode from 'qrcode';
 import { rateLimit } from 'express-rate-limit';
 import { HttpError } from '../lib/http-error.js';
 import { sniff } from '../lib/sniff.js';
+import { isValidEmail, normalizeEmail, normalizePhone } from '../public/js/contact.js';
 
 export const RESULT_CREATE_LIMIT = 60;
+export const DELIVERY_LIMIT = 30;
 const PHOTO_MAX = 8 * 1024 * 1024;
 const GIF_MAX = '10mb';
 const VIDEO_MAX = '30mb';
@@ -20,10 +22,7 @@ function liveResult(store, token) {
   return row;
 }
 
-export function resultsApiRouter({ store, queue = null, services = { email: false, whatsapp: false } }) {
-  // queue dan services dipakai endpoint send/deliveries (Task 3.3).
-  void queue;
-  void services;
+export function resultsApiRouter({ db, store, queue = null, services = { email: false, whatsapp: false } }) {
   const router = Router();
 
   const assertDiskOk = async () => {
@@ -33,6 +32,13 @@ export function resultsApiRouter({ store, queue = null, services = { email: fals
   const createLimiter = rateLimit({
     windowMs: 10 * 60_000,
     limit: RESULT_CREATE_LIMIT,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { error: 'Terlalu banyak permintaan. Coba lagi nanti.' },
+  });
+  const deliveryLimiter = rateLimit({
+    windowMs: 10 * 60_000,
+    limit: DELIVERY_LIMIT,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
     message: { error: 'Terlalu banyak permintaan. Coba lagi nanti.' },
@@ -72,6 +78,31 @@ export function resultsApiRouter({ store, queue = null, services = { email: fals
     await assertDiskOk();
     next();
   };
+
+  // Kirim tidak menulis file, jadi tanpa pemeriksaan disk.
+  const authorizeKey = (req, res, next) => {
+    const row = liveResult(store, req.params.token);
+    if (!store.verifyKey(row, req.get('x-result-key'))) throw new HttpError(403, 'Kunci tidak valid');
+    req.result = row;
+    next();
+  };
+
+  router.post('/:token/send', deliveryLimiter, authorizeKey, (req, res) => {
+    const { channel, to } = req.body ?? {};
+    if (channel !== 'email' && channel !== 'whatsapp') throw new HttpError(422, 'Kanal tidak valid');
+    const recipient = channel === 'email' ? normalizeEmail(typeof to === 'string' ? to : '') : normalizePhone(to);
+    if (channel === 'email' ? !isValidEmail(recipient) : !recipient) throw new HttpError(422, 'Kontak tidak valid');
+    if (!services[channel] || !queue) throw new HttpError(409, 'Layanan pengiriman tidak aktif');
+    const id = queue.enqueue(req.result, channel, recipient);
+    res.status(202).json({ id });
+  });
+
+  router.get('/:token/deliveries', authorizeKey, (req, res) => {
+    const rows = db
+      .prepare('SELECT id, channel, recipient_masked, status FROM deliveries WHERE result_id = ? ORDER BY id')
+      .all(req.result.id);
+    res.json(rows.map((r) => ({ id: r.id, channel: r.channel, to: r.recipient_masked, status: r.status })));
+  });
 
   const putAsset = (kind, types, limit, allowed) => [
     authorize,

@@ -18,6 +18,9 @@ import { kioskAdminRouter, kioskPublicRouter } from './routes/kiosk.js';
 import { requireAdmin } from './middleware/requireAdmin.js';
 import { resultsApiRouter, resultFilesRouter, resultPageHandler } from './routes/results.js';
 import { createResultsStore } from './lib/results-store.js';
+import { createDeliveryQueue } from './lib/delivery-queue.js';
+import { createMailer } from './lib/mailer.js';
+import { createWhatsApp } from './lib/whatsapp.js';
 import { checkOrigin } from './middleware/checkOrigin.js';
 
 const SqliteStore = SqliteStoreFactory(session);
@@ -43,7 +46,7 @@ function noStore(req, res, next) {
   next();
 }
 
-export function createApp({ config, db, storage, now = () => new Date(), extraRoutes, resultsStatfs }) {
+export function createApp({ config, db, storage, now = () => new Date(), extraRoutes, resultsStatfs, senders }) {
   const app = express();
   app.locals.now = now;
   app.locals.db = db;
@@ -59,6 +62,22 @@ export function createApp({ config, db, storage, now = () => new Date(), extraRo
     runCleanup();
     setInterval(runCleanup, 60 * 60_000).unref();
   }
+
+  senders ??= {
+    ...(config.mail && { email: createMailer(config.mail) }),
+    ...(config.whatsapp && { whatsapp: createWhatsApp(config.whatsapp) }),
+  };
+  const services = { email: Boolean(senders.email), whatsapp: Boolean(senders.whatsapp) };
+  const queue = createDeliveryQueue({
+    db,
+    store: results,
+    senders,
+    now,
+    secrets: [config.mail?.pass, config.whatsapp?.token],
+  });
+  app.locals.queue = queue;
+  queue.recover();
+  if (config.nodeEnv !== 'test') queue.start();
 
   if (config.isProd) app.set('trust proxy', 1);
 
@@ -124,9 +143,9 @@ export function createApp({ config, db, storage, now = () => new Date(), extraRo
 
   app.use('/api/templates', publicTemplatesRouter({ db, storage }));
   app.use('/api/sessions', sessionsRouter({ db }));
-  app.use('/api/settings', publicSettingsRouter({ db }));
+  app.use('/api/settings', publicSettingsRouter({ db, services }));
   app.use('/api/kiosk', noStore, checkOrigin, kioskPublicRouter({ db }));
-  app.use('/api/results', noStore, checkOrigin, resultsApiRouter({ store: results }));
+  app.use('/api/results', noStore, checkOrigin, resultsApiRouter({ db, store: results, queue, services }));
 
   extraRoutes?.(app);
 

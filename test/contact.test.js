@@ -35,3 +35,8 @@ test('maskEmail menyisakan 2 karakter lokal', () => {
 test('maskPhone menyisakan 4 digit awal dan akhir', () => {
   assert.equal(maskPhone('6281234567890'), '6281****7890');
 });
+
+test('normalizePhone menangani (0) setelah kode negara dan awalan 00', () => {
+  assert.equal(normalizePhone('+62 (0)812 3456 7890'), '6281234567890');
+  assert.equal(normalizePhone('0062 812 3456 7890'), '6281234567890');
+});
