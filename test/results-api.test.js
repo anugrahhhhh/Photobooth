@@ -185,3 +185,28 @@ test('batas laju: permintaan ke-61 dalam 10 menit -> 429', async () => {
     lt.cleanup();
   }
 });
+
+test('PUT gif saat disk penuh -> 507 dan tidak ada anim.gif', async () => {
+  let bavail = 200000;
+  const d = await makeTestApp({ resultsStatfs: async () => ({ bsize: 4096, blocks: 262144, bavail }) });
+  try {
+    const r = await mutate(request(d.app).post('/api/results')).field('consent', '1').attach('photo', THUMB, 'p.jpg');
+    assert.equal(r.status, 201);
+    bavail = 10;
+    const res = await mutate(request(d.app).put(`/api/results/${r.body.token}/gif`))
+      .set('Content-Type', 'image/gif')
+      .set('X-Result-Key', r.body.key)
+      .send(GIF);
+    assert.equal(res.status, 507);
+    assert.ok(!listDir(path.join(d.uploadDir, 'results', r.body.token)).includes('anim.gif'));
+  } finally {
+    d.cleanup();
+  }
+});
+
+test('PUT gif 10 MB + 1 -> 413, Content-Type salah -> 422', async () => {
+  const { token, key } = await create();
+  const big = Buffer.concat([Buffer.from('GIF89a'), Buffer.alloc(10 * 1024 * 1024 - 5)]);
+  assert.equal((await putAsset(token, key, 'gif', big, 'image/gif')).status, 413);
+  assert.equal((await putAsset(token, key, 'gif', GIF, 'text/plain')).status, 422);
+});

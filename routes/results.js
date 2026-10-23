@@ -26,6 +26,10 @@ export function resultsApiRouter({ store, queue = null, services = { email: fals
   void services;
   const router = Router();
 
+  const assertDiskOk = async () => {
+    if (!(await store.checkDisk()).ok) throw new HttpError(507, 'Penyimpanan penuh. Hubungi petugas.');
+  };
+
   const createLimiter = rateLimit({
     windowMs: 10 * 60_000,
     limit: RESULT_CREATE_LIMIT,
@@ -44,8 +48,7 @@ export function resultsApiRouter({ store, queue = null, services = { email: fals
     const photo = req.file?.buffer;
     if (!photo) throw new HttpError(422, 'Foto diperlukan');
     if (sniff(photo) !== 'jpg') throw new HttpError(422, 'Foto harus berformat JPEG');
-    const disk = await store.checkDisk();
-    if (!disk.ok) throw new HttpError(507, 'Penyimpanan penuh. Hubungi petugas.');
+    await assertDiskOk();
     const tid = Number(templateId);
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     const result = await store.create({
@@ -63,9 +66,10 @@ export function resultsApiRouter({ store, queue = null, services = { email: fals
   });
 
   // Cek token, kedaluwarsa, lalu kunci unggah sebelum body dibaca.
-  const authorize = (req, res, next) => {
+  const authorize = async (req, res, next) => {
     const row = liveResult(store, req.params.token);
     if (!store.verifyKey(row, req.get('x-result-key'))) throw new HttpError(403, 'Kunci tidak valid');
+    await assertDiskOk();
     next();
   };
 
