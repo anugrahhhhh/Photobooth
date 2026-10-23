@@ -107,6 +107,7 @@ export default {
   'booth.share.cancel': "Cancel",
   'booth.share.uploading': "Uploading...",
   'booth.share.full': "Storage is full. Please ask the staff.",
+  'booth.share.tooBig': "The photo is too large to send",
   'booth.share.failed': "Upload failed. Try again.",
   'booth.share.qrAlt': "QR code for the result page",
   'booth.share.email': "Email",

@@ -149,6 +149,7 @@ async function sendTo(ctx, channel, to) {
   } catch (err) {
     if (ctx.share.epoch() !== epoch || err.status === undefined) return; // reset di tengah jalan
     if (err.status === 507) setChannelErr(channel, 'booth.share.full');
+    else if (err.status === 413) setChannelErr(channel, 'booth.share.tooBig');
     else if (err.status === 422) setChannelErr(channel, channel === 'email' ? 'booth.share.invalidEmail' : 'booth.share.invalidPhone');
     else setChannelErr(channel, errorKey(err));
   } finally {
@@ -218,8 +219,10 @@ async function sendQr(ctx) {
     btn.disabled = false;
   } catch (err) {
     if (ctx.visit() !== visit) return;
-    setStatus(err.status === 507 ? 'booth.share.full' : 'booth.share.failed', true);
-    $('#share-retry').hidden = err.status === 507;
+    // 507 dan 413 tidak berubah dengan mencoba lagi: tanpa tombol Coba lagi.
+    const final = { 507: 'booth.share.full', 413: 'booth.share.tooBig' }[err.status];
+    setStatus(final ?? 'booth.share.failed', true);
+    $('#share-retry').hidden = Boolean(final);
     btn.disabled = false;
   }
 }

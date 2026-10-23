@@ -107,6 +107,7 @@ export default {
   'booth.share.cancel': "Batal",
   'booth.share.uploading': "Mengunggah...",
   'booth.share.full': "Penyimpanan penuh. Hubungi petugas.",
+  'booth.share.tooBig': "Foto terlalu besar untuk dikirim",
   'booth.share.failed': "Gagal mengunggah. Coba lagi.",
   'booth.share.qrAlt': "Kode QR halaman hasil",
   'booth.share.email': "Email",

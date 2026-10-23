@@ -34,6 +34,8 @@ function renderMedia() {
   $('#gif-img').hidden = !gifReady;
   $('#gif-download').hidden = !gifReady;
   $('#gif-wait').hidden = gifReady;
+  // Polling berhenti setelah 10 menit; GIF yang tidak pernah datang tidak ditunggu selamanya.
+  $('#gif-item').hidden = !gifReady && !isYoung();
 
   // Video hanya ditampilkan bila sudah ada; fitur video bisa dimatikan di booth.
   const videoReady = Boolean(result.video_url);
@@ -81,6 +83,7 @@ async function load(first) {
     else if (err.status === 404) showMessage('result.notFound');
     else if (first) showMessage('result.error');
     else if (result && isYoung()) pollTimer = setTimeout(() => load(false), POLL_MS); // gangguan sesaat; berhenti setelah 10 menit
+    else if (result) renderMedia();
   }
 }
 

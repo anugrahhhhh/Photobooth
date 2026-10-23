@@ -8,8 +8,10 @@ import { goFirst } from './welcome.js';
 import { clearFilteredCache } from './adjust.js';
 import { resultButtonState } from '../result-view.js';
 import { buildGif } from '../../media/gif.js';
+import { waitSessionVideo } from '../../media/recorder.js';
 import { autoSend, resumeStatus, enterPanel, initPanel, leavePanel, setShareReady, setShareFileProvider } from '../share-panel.js';
 
+const VIDEO_WAIT_MS = 5000; // klip yang belum tertutup setelah ini dianggap tidak ada
 let phase = 'preparing';
 let tab = 'photo'; // 'photo' | 'gif' | 'video'
 
@@ -170,7 +172,7 @@ async function enterResult(ctx) {
   }
   const current = ctx.result.current();
   if (ctx.visit() !== visit || !current) return;
-  await ctx.session.videoPending; // klip terakhir mungkin masih ditutup
+  await waitSessionVideo(ctx.session, VIDEO_WAIT_MS); // klip terakhir mungkin masih ditutup
   if (ctx.visit() !== visit || ctx.result.current() !== current) return;
   $('#result-img').src = current.url;
   setPhase('ready');

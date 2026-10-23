@@ -352,8 +352,10 @@ async function addFromGallery(files) {
   }
   if (ctx.visit() !== visit) return;
   $('#gallery-errors').replaceChildren(...errors);
-  if (!errors.length && ctx.session.target == null && nextEmptySlot(ctx.state) < 0) ctx.go('adjust');
-  else updateView();
+  if (!errors.length && ctx.session.target == null && nextEmptySlot(ctx.state) < 0) {
+    finishSessionRecording(ctx); // seperti jalur lain ke Atur; perekam yang dijeda tidak boleh disambung ulang
+    ctx.go('adjust');
+  } else updateView();
 }
 
 /* ---------- Siklus layar ---------- */

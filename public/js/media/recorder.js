@@ -201,14 +201,30 @@ export function createSessionRecorder({ video, mirror, maxMs = 90000, fps = 24, 
   return api;
 }
 
-// Dipanggil setelah foto terakhir: hasil masuk ctx.session.video. Reset di tengah jalan membuang hasilnya.
+// Dipanggil setelah foto terakhir: hasil masuk ctx.session.video. Reset di tengah jalan, atau
+// videoPending yang dikosongkan (ulang sesi, batas tunggu), membuang hasilnya.
 export function finishSessionRecording(ctx) {
   const rec = ctx.recorder;
   if (!rec) return;
   ctx.recorder = null;
   const session = ctx.session;
-  session.videoPending = rec.stop().then((out) => {
+  const pending = rec.stop().then((out) => {
+    if (session.videoPending !== pending) return;
     if (ctx.session === session && out) session.video = out;
     session.videoPending = null;
   });
+  session.videoPending = pending;
+}
+
+// Tunggu klip terakhir ditutup paling lama ms; bila lewat, sesi dianggap tanpa video.
+export async function waitSessionVideo(session, ms) {
+  const pending = session.videoPending;
+  if (!pending) return;
+  let timer;
+  const timedOut = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(true), ms);
+  });
+  const late = await Promise.race([pending.then(() => false), timedOut]);
+  clearTimeout(timer);
+  if (late && session.videoPending === pending) session.videoPending = null;
 }
