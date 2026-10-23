@@ -166,3 +166,49 @@ test('last_error tidak memuat alamat penerima', async () => {
   await q.tick();
   assert.ok(!get().last_error.includes('rina@x.com'));
 });
+
+test('batas harian global dihitung di seluruh hasil dan kanal selama 24 jam', () => {
+  const q = mk({ maxPerDay: 2 });
+  const token2 = 'B'.repeat(22);
+  db.prepare(`INSERT INTO results (token, key_hash, lang, base_url, created_at, expires_at) VALUES (?, 'h', 'en', 'http://b.test', ?, ?)`)
+    .run(token2, T0.toISOString(), new Date(T0.getTime() + 7 * 864e5).toISOString());
+  const row2 = db.prepare('SELECT * FROM results WHERE token = ?').get(token2);
+  q.enqueue(row, 'email', 'a@b.com');
+  q.enqueue(row2, 'whatsapp', '6281234567890');
+  assert.deepEqual(q.stats24h(), { count: 2, limit: 2 });
+  assert.throws(() => q.enqueue(row2, 'email', 'a@b.com'), (e) => e.status === 429 && /harian/.test(e.message));
+  advance(24 * 3600_000 + 1);
+  assert.deepEqual(q.stats24h(), { count: 0, limit: 2 });
+  q.enqueue(row2, 'email', 'a@b.com');
+});
+
+test('drain menghentikan worker dan menunggu tick yang sedang berjalan', async () => {
+  let release;
+  behavior = () => new Promise((r) => (release = r));
+  const q = mk();
+  q.enqueue(row, 'email', 'a@b.com');
+  const ticking = q.tick();
+  let drained = false;
+  const d = q.drain(1000).then(() => (drained = true));
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(drained, false);
+  release();
+  await ticking;
+  await d;
+  assert.equal(get().status, 'sent');
+});
+
+test('drain dibatasi waktu bila tick menggantung', async () => {
+  behavior = () => new Promise(() => {});
+  const q = mk({ sendTimeoutMs: 200 });
+  q.enqueue(row, 'email', 'a@b.com');
+  const ticking = q.tick();
+  const t0 = Date.now();
+  await q.drain(30);
+  assert.ok(Date.now() - t0 < 150);
+  await ticking;
+});
+
+test('drain tanpa tick berjalan langsung selesai', async () => {
+  await mk().drain(1000);
+});

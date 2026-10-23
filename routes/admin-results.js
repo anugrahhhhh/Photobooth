@@ -15,6 +15,7 @@ export function adminResultsRouter({ store, queue, services, mailer, secrets = [
       disk_total: total,
       disk_free: free,
       deliveries_7d: queue.stats7d(),
+      deliveries_24h: queue.stats24h(),
       services,
     });
   });

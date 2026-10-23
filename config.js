@@ -18,6 +18,29 @@ function loadWhatsApp(env) {
   return { phoneNumberId, token, template, lang, apiBase };
 }
 
+// URL publik untuk tautan keluar (QR, email, WhatsApp). Hanya origin http(s), tanpa path.
+function loadPublicUrl(env) {
+  const raw = (env.PUBLIC_URL || '').trim();
+  if (!raw) return null;
+  let url;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error(`PUBLIC_URL tidak valid: ${raw}`);
+  }
+  const ok = (url.protocol === 'http:' || url.protocol === 'https:') && url.pathname === '/' && !url.search && !url.hash && !url.username && !url.password;
+  if (!ok) throw new Error(`PUBLIC_URL harus berupa http(s)://host tanpa path: ${raw}`);
+  return url.origin;
+}
+
+function loadMaxDeliveriesPerDay(env) {
+  const raw = env.MAX_DELIVERIES_PER_DAY;
+  if (raw === undefined || raw === '') return 400;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1) throw new Error(`MAX_DELIVERIES_PER_DAY tidak valid: ${raw}`);
+  return n;
+}
+
 export function loadConfig(env = process.env) {
   const nodeEnv = env.NODE_ENV || 'development';
   const isProd = nodeEnv === 'production';
@@ -44,9 +67,18 @@ export function loadConfig(env = process.env) {
     if (nodeEnv !== 'test') console.warn('SESSION_SECRET kosong; memakai secret acak sementara (sesi hilang saat restart)');
   }
 
+  const mail = loadMail(env);
+  const whatsapp = loadWhatsApp(env);
+  const publicUrl = loadPublicUrl(env);
+  if (isProd && (mail || whatsapp) && !publicUrl) {
+    throw new Error('PUBLIC_URL wajib diisi di produksi bila email atau WhatsApp diaktifkan');
+  }
+
   return {
-    mail: loadMail(env),
-    whatsapp: loadWhatsApp(env),
+    mail,
+    whatsapp,
+    publicUrl,
+    maxDeliveriesPerDay: loadMaxDeliveriesPerDay(env),
     port,
     dbPath: env.DB_PATH || './data/photobooth.db',
     uploadDir: env.UPLOAD_DIR || './uploads',

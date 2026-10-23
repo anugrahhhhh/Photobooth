@@ -23,6 +23,7 @@ import { createMailer } from './lib/mailer.js';
 import { createWhatsApp } from './lib/whatsapp.js';
 import { adminResultsRouter } from './routes/admin-results.js';
 import { checkOrigin } from './middleware/checkOrigin.js';
+import { createUploadGate } from './lib/upload-gate.js';
 
 const SqliteStore = SqliteStoreFactory(session);
 
@@ -75,8 +76,11 @@ export function createApp({ config, db, storage, now = () => new Date(), extraRo
     senders,
     now,
     secrets: [config.mail?.pass, config.whatsapp?.token],
+    maxPerDay: config.maxDeliveriesPerDay,
   });
   app.locals.queue = queue;
+  const uploadGate = createUploadGate();
+  app.locals.uploadGate = uploadGate;
   queue.recover();
   if (config.nodeEnv !== 'test') queue.start();
 
@@ -150,7 +154,7 @@ export function createApp({ config, db, storage, now = () => new Date(), extraRo
   app.use('/api/sessions', sessionsRouter({ db }));
   app.use('/api/settings', publicSettingsRouter({ db, services }));
   app.use('/api/kiosk', noStore, checkOrigin, kioskPublicRouter({ db }));
-  app.use('/api/results', noStore, checkOrigin, resultsApiRouter({ db, store: results, queue, services }));
+  app.use('/api/results', noStore, checkOrigin, resultsApiRouter({ db, store: results, queue, services, publicUrl: config.publicUrl, uploadGate }));
 
   extraRoutes?.(app);
 
@@ -162,7 +166,8 @@ export function createApp({ config, db, storage, now = () => new Date(), extraRo
 function errorHandler(err, req, res, next) {
   if (res.headersSent) return next(err);
   const [status, message] = classify(err);
-  if (status >= 500) console.error(err);
+  // 503 "sibuk" adalah penolakan yang disengaja, bukan galat server.
+  if (status >= 500 && status !== 503) console.error(err);
   res.status(status).json({ error: message });
 }
 
@@ -173,6 +178,7 @@ function classify(err) {
   }
   if (err.type === 'entity.parse.failed') return [400, 'Body JSON tidak valid'];
   if (err.type === 'entity.too.large') return [413, 'Body terlalu besar'];
+  if (err.type === 'request.aborted') return [400, 'Unggahan dibatalkan'];
   if (err.status === 404 || err.statusCode === 404) return [404, 'Tidak ditemukan'];
   return [500, 'Terjadi kesalahan pada server'];
 }
@@ -187,11 +193,14 @@ async function start() {
 
   const shutdown = (signal) => {
     console.log(`${signal} diterima, menutup server...`);
-    server.close(() => {
+    app.locals.queue.stop();
+    server.close(async () => {
+      await app.locals.queue.drain(10_000);
       db.close();
       process.exit(0);
     });
-    setTimeout(() => process.exit(1), 10_000).unref();
+    // Lebih lama dari batas drain antrean (10 dtk) agar penutupan normal sempat selesai.
+    setTimeout(() => process.exit(1), 15_000).unref();
   };
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));

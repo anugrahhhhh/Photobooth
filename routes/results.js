@@ -5,10 +5,12 @@ import QRCode from 'qrcode';
 import { rateLimit } from 'express-rate-limit';
 import { HttpError } from '../lib/http-error.js';
 import { sniff } from '../lib/sniff.js';
+import { createUploadGate } from '../lib/upload-gate.js';
 import { isValidEmail, normalizeEmail, normalizePhone } from '../public/js/contact.js';
 
 export const RESULT_CREATE_LIMIT = 60;
 export const DELIVERY_LIMIT = 30;
+export const RESULT_ASSET_LIMIT = 30;
 const PHOTO_MAX = 8 * 1024 * 1024;
 const GIF_MAX = '10mb';
 const VIDEO_MAX = '30mb';
@@ -22,7 +24,7 @@ function liveResult(store, token) {
   return row;
 }
 
-export function resultsApiRouter({ db, store, queue = null, services = { email: false, whatsapp: false } }) {
+export function resultsApiRouter({ db, store, queue = null, services = { email: false, whatsapp: false }, publicUrl = null, uploadGate = createUploadGate() }) {
   const router = Router();
 
   const assertDiskOk = async () => {
@@ -43,12 +45,20 @@ export function resultsApiRouter({ db, store, queue = null, services = { email: 
     legacyHeaders: false,
     message: { error: 'Terlalu banyak permintaan. Coba lagi nanti.' },
   });
+  const assetLimiter = rateLimit({
+    windowMs: 10 * 60_000,
+    limit: RESULT_ASSET_LIMIT,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { error: 'Terlalu banyak permintaan. Coba lagi nanti.' },
+  });
+  const gate = uploadGate.middleware;
   const photoUpload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: PHOTO_MAX, files: 1, fields: 5 },
   }).single('photo');
 
-  router.post('/', createLimiter, photoUpload, async (req, res) => {
+  router.post('/', createLimiter, gate, photoUpload, async (req, res) => {
     const { consent, lang, template_id: templateId } = req.body ?? {};
     if (consent !== '1') throw new HttpError(422, 'Persetujuan diperlukan');
     const photo = req.file?.buffer;
@@ -56,7 +66,8 @@ export function resultsApiRouter({ db, store, queue = null, services = { email: 
     if (sniff(photo) !== 'jpg') throw new HttpError(422, 'Foto harus berformat JPEG');
     await assertDiskOk();
     const tid = Number(templateId);
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    // Tautan keluar memakai PUBLIC_URL; Host dari klien hanya dipakai di dev/tes tanpa PUBLIC_URL.
+    const baseUrl = publicUrl ?? `${req.protocol}://${req.get('host')}`;
     const result = await store.create({
       photo,
       templateId: Number.isInteger(tid) && tid > 0 ? tid : null,
@@ -105,7 +116,9 @@ export function resultsApiRouter({ db, store, queue = null, services = { email: 
   });
 
   const putAsset = (kind, types, limit, allowed) => [
+    assetLimiter,
     authorize,
+    gate,
     express.raw({ type: types, limit }),
     async (req, res) => {
       const ext = sniff(req.body);

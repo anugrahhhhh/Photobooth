@@ -302,3 +302,125 @@ test('send: hasil kedaluwarsa -> 410; pengirim yang selalu gagal berakhir failed
     s.cleanup();
   }
 });
+
+// --- PUBLIC_URL, batas harian global, batas unggah ---
+const EVIL = (req) => req.set('Host', 'evil.example').set('Origin', 'http://evil.example');
+const putGif = (app, token, key, body = GIF) =>
+  mutate(request(app).put(`/api/results/${token}/gif`)).set('Content-Type', 'image/gif').set('X-Result-Key', key).send(body);
+
+test('PUBLIC_URL dipakai untuk base_url, url respons, dan tautan email walau Host palsu', async () => {
+  const calls = [];
+  const s = await makeTestApp({
+    env: { PUBLIC_URL: 'https://photobooth-anugrah.fly.dev/' },
+    senders: { email: { send: async (args) => { calls.push(args); } } },
+  });
+  try {
+    const res = await EVIL(request(s.app).post('/api/results')).field('consent', '1').attach('photo', THUMB, 'p.jpg');
+    assert.equal(res.status, 201);
+    const pub = 'https://photobooth-anugrah.fly.dev';
+    assert.equal(res.body.url, `${pub}/p/${res.body.token}`);
+    assert.equal(s.db.prepare('SELECT base_url FROM results').get().base_url, pub);
+    const sent = await EVIL(request(s.app).post(`/api/results/${res.body.token}/send`))
+      .set('X-Result-Key', res.body.key)
+      .send({ channel: 'email', to: 'a@b.com' });
+    assert.equal(sent.status, 202);
+    await s.app.locals.queue.tick();
+    assert.equal(calls[0].pageUrl, `${pub}/p/${res.body.token}`);
+  } finally {
+    s.cleanup();
+  }
+});
+
+test('batas kiriman harian global: melewati MAX_DELIVERIES_PER_DAY -> 429, pulih setelah 24 jam', async () => {
+  let clk = START;
+  const s = await makeTestApp({ now: () => clk, env: { MAX_DELIVERIES_PER_DAY: '2' }, senders: { email: { send: async () => {} } } });
+  try {
+    const a = await createOn(s.app);
+    const b = await createOn(s.app);
+    const body = { channel: 'email', to: 'a@b.com' };
+    assert.equal((await sendReq(s.app, a.token, a.key, body)).status, 202);
+    assert.equal((await sendReq(s.app, b.token, b.key, body)).status, 202);
+    const over = await sendReq(s.app, b.token, b.key, body);
+    assert.equal(over.status, 429);
+    assert.equal(over.body.error, 'Batas kiriman harian tercapai. Coba lagi besok.');
+    assert.equal(s.db.prepare('SELECT COUNT(*) n FROM deliveries').get().n, 2);
+    clk = new Date(START.getTime() + 24 * 3600_000 + 1);
+    assert.equal((await sendReq(s.app, b.token, b.key, body)).status, 202);
+  } finally {
+    s.cleanup();
+  }
+});
+
+test('batas laju PUT aset: permintaan ke-31 dalam 10 menit -> 429', async () => {
+  const s = await makeTestApp();
+  try {
+    const { token, key } = await createOn(s.app);
+    for (let i = 0; i < 30; i++) assert.equal((await putGif(s.app, token, key)).status, 204, `permintaan ${i + 1}`);
+    const last = await mutate(request(s.app).put(`/api/results/${token}/video`))
+      .set('Content-Type', 'video/webm')
+      .set('X-Result-Key', key)
+      .send(WEBM);
+    assert.equal(last.status, 429);
+  } finally {
+    s.cleanup();
+  }
+});
+
+test('batas unggahan serentak: 3 unggahan tertahan -> ke-4 503 + Retry-After, slot lepas saat koneksi putus', async () => {
+  const http = await import('node:http');
+  const s = await makeTestApp();
+  const server = s.app.listen(0);
+  const gate = s.app.locals.uploadGate;
+  const waitFor = async (cond) => {
+    for (let i = 0; i < 200 && !cond(); i++) await new Promise((r) => setTimeout(r, 10));
+    assert.ok(cond());
+  };
+  const held = [];
+  try {
+    await new Promise((r) => server.once('listening', r));
+    const { port } = server.address();
+    const { token, key } = await createOn(s.app);
+    for (let i = 0; i < 3; i++) {
+      const req = http.request({
+        port,
+        method: 'PUT',
+        path: `/api/results/${token}/gif`,
+        headers: { Host: 'booth.test', Origin: 'http://booth.test', 'Content-Type': 'image/gif', 'X-Result-Key': key, 'Content-Length': 1000 },
+      });
+      req.on('error', () => {});
+      req.write('GIF89a');
+      held.push(req);
+    }
+    await waitFor(() => gate.active === 3);
+    const busy = await putGif(s.app, token, key);
+    assert.equal(busy.status, 503);
+    assert.equal(busy.headers['retry-after'], '5');
+    assert.ok(busy.body.error);
+    const busyPhoto = await mutate(request(s.app).post('/api/results')).field('consent', '1').attach('photo', THUMB, 'p.jpg');
+    assert.equal(busyPhoto.status, 503);
+    held.forEach((r) => r.destroy());
+    await waitFor(() => gate.active === 0);
+    assert.equal((await putGif(s.app, token, key)).status, 204);
+  } finally {
+    held.forEach((r) => r.destroy());
+    server.closeAllConnections();
+    await new Promise((r) => server.close(r));
+    s.cleanup();
+  }
+});
+
+test('slot unggahan dilepas setelah galat (413, 422, foto PNG)', async () => {
+  const s = await makeTestApp();
+  try {
+    const gate = s.app.locals.uploadGate;
+    const { token, key } = await createOn(s.app);
+    const big = Buffer.concat([Buffer.from('GIF89a'), Buffer.alloc(10 * 1024 * 1024 - 5)]);
+    assert.equal((await putGif(s.app, token, key, big)).status, 413);
+    assert.equal((await putGif(s.app, token, key, PNG)).status, 422);
+    assert.equal((await mutate(request(s.app).post('/api/results')).field('consent', '1').attach('photo', PNG, 'p.jpg')).status, 422);
+    await new Promise((r) => setTimeout(r, 20));
+    assert.equal(gate.active, 0);
+  } finally {
+    s.cleanup();
+  }
+});

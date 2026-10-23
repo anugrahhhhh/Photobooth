@@ -128,6 +128,7 @@ function initResults() {
       const s = await adminApi.get('/api/admin/results/summary');
       svc($('#svc-email'), s.services.email);
       svc($('#svc-whatsapp'), s.services.whatsapp);
+      $('#svc-deliveries').textContent = `${s.deliveries_24h.count} / ${s.deliveries_24h.limit}`;
       testBtn.disabled = !s.services.email;
       storageLine.textContent = `${s.count} hasil · ${formatBytes(s.bytes)} dari ${formatBytes(s.disk_total)}`;
       delBtn.disabled = s.count === 0;

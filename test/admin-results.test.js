@@ -46,6 +46,7 @@ test('summary setelah 2 hasil: count 2, bytes > 0, disk dan layanan', async () =
     assert.ok(res.body.disk_total > 0);
     assert.ok(res.body.disk_free > 0);
     assert.deepEqual(res.body.deliveries_7d, { sent: 0, failed: 0 });
+    assert.deepEqual(res.body.deliveries_24h, { count: 0, limit: 400 });
     assert.deepEqual(res.body.services, { email: true, whatsapp: false });
   } finally {
     t.cleanup();
@@ -110,6 +111,24 @@ test('test-email: galat SMTP -> 502 tanpa SMTP_PASS di body', async () => {
     assert.equal(res.status, 502);
     assert.ok(res.body.error);
     assert.ok(!JSON.stringify(res.body).includes('rahasia'));
+  } finally {
+    t.cleanup();
+  }
+});
+
+test('summary: deliveries_24h menghitung kiriman 24 jam terakhir dan memakai MAX_DELIVERIES_PER_DAY', async () => {
+  const t = await makeTestApp({ env: { MAX_DELIVERIES_PER_DAY: '50' }, senders: { email: fakeMailer() } });
+  try {
+    const agent = await loginAgent(t.app, t.db);
+    const { body } = await makeResult(t.app);
+    for (let i = 0; i < 2; i++) {
+      const r = await mutate(request(t.app).post(`/api/results/${body.token}/send`))
+        .set('X-Result-Key', body.key)
+        .send({ channel: 'email', to: 'a@b.co' });
+      assert.equal(r.status, 202);
+    }
+    const res = await agent.get('/api/admin/results/summary');
+    assert.deepEqual(res.body.deliveries_24h, { count: 2, limit: 50 });
   } finally {
     t.cleanup();
   }
