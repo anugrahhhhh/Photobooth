@@ -32,7 +32,7 @@ const DEFAULT_SETTINGS = {
 };
 
 const IDLE_WARN_MS = 10_000;
-const newSession = () => ({ templateImg: null, target: null, selected: 0, pickMode: 'start', consent: false, contact: null });
+const newSession = () => ({ templateImg: null, target: null, selected: 0, pickMode: 'start', consent: false, contact: null, video: null, videoTried: false, videoPending: null });
 
 function createCtx(settings) {
   const state = createState();
@@ -44,10 +44,15 @@ function createCtx(settings) {
   const photoHooks = [];
   // hasil di server milik sesi: dibuang bersama reset
   resetHooks.push(() => ctx.share.reset());
+  resetHooks.push(() => {
+    ctx.recorder?.discard();
+    ctx.recorder = null;
+  });
 
   const ctx = {
     state,
     session: newSession(),
+    recorder: null,
     settings,
     result: createResultStore(),
     share: createShareSession(),

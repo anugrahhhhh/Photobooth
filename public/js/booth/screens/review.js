@@ -3,6 +3,7 @@ import { fitWithin } from '../../geometry.js';
 import { overlayLayout, applyOverlay } from '../overlay.js';
 import { createReviewTimer } from '../review-timer.js';
 import { nextEmptySlot, releaseCanvas } from '../../state.js';
+import { finishSessionRecording } from '../../media/recorder.js';
 
 const MAX_REVIEW_SIDE = 1024;
 
@@ -26,6 +27,7 @@ function advance() {
     ctx.go('shoot', { auto: true });
   } else {
     ctx.session.target = null;
+    finishSessionRecording(ctx);
     ctx.go('adjust');
   }
 }
@@ -51,6 +53,7 @@ export function init(ctx) {
 
 export function enter(ctx, { slot = 0 } = {}) {
   ctx.idle?.pause();
+  ctx.recorder?.pause(); // waktu tinjau tidak ikut terekam; shoot melanjutkan
   slotNow = slot;
   const { state } = ctx;
   const src = state.photos[slot];

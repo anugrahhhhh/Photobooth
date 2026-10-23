@@ -11,11 +11,38 @@ import { buildGif } from '../../media/gif.js';
 import { autoSend, resumeStatus, enterPanel, initPanel, leavePanel, setShareReady, setShareFileProvider } from '../share-panel.js';
 
 let phase = 'preparing';
-let tab = 'photo'; // 'photo' | 'gif'
+let tab = 'photo'; // 'photo' | 'gif' | 'video'
 
 // GIF dibuat satu kali per File hasil. File baru (foto, transform, atau filter berubah) = GIF lama
 // dibuang; job menolak build lama yang selesai belakangan. Unggahan ke server lewat ctx.share.attachGif.
 const gif = { job: 0, forFile: null, file: null, url: null, status: 'idle' };
+
+// Video sesi direkam di layar Berpose (ctx.session.video); di sini hanya diputar dan diunggah.
+const video = { blob: null, url: null, file: null };
+
+function releaseVideo() {
+  if (video.url) URL.revokeObjectURL(video.url);
+  Object.assign(video, { blob: null, url: null, file: null });
+  $('#result-video').removeAttribute('src');
+  setMessage($('#video-status'), null, false);
+  $('#tab-video').hidden = true;
+  if (tab === 'video') tab = 'photo';
+}
+
+function syncVideo(ctx, current) {
+  const sv = ctx.session.video;
+  if (!sv) return releaseVideo();
+  if (video.blob !== sv.blob) {
+    releaseVideo();
+    video.blob = sv.blob;
+    video.url = URL.createObjectURL(sv.blob);
+    video.file = new File([sv.blob], `photobooth-${timestamp()}.${sv.ext}`, { type: sv.blob.type });
+    $('#result-video').src = video.url;
+  }
+  $('#tab-video').hidden = false;
+  // File hasil baru (Atur ulang) = hasil server baru: unggah ulang video yang sama
+  ctx.share.attachVideo(current.file, sv.blob, sv.ext, () => setMessage($('#video-status'), 'booth.result.videoTooBig', true));
+}
 
 function releaseGif() {
   if (gif.url) URL.revokeObjectURL(gif.url);
@@ -38,8 +65,11 @@ function renderGif() {
 function renderTabs() {
   $('#tab-photo').setAttribute('aria-pressed', String(tab === 'photo'));
   $('#tab-gif').setAttribute('aria-pressed', String(tab === 'gif'));
+  $('#tab-video').setAttribute('aria-pressed', String(tab === 'video'));
   $('#result-img').hidden = tab !== 'photo';
   $('#gif-view').hidden = tab !== 'gif';
+  $('#video-view').hidden = tab !== 'video';
+  if (tab !== 'video') $('#result-video').pause();
   syncDownload();
 }
 
@@ -140,18 +170,26 @@ async function enterResult(ctx) {
   }
   const current = ctx.result.current();
   if (ctx.visit() !== visit || !current) return;
+  await ctx.session.videoPending; // klip terakhir mungkin masih ditutup
+  if (ctx.visit() !== visit || ctx.result.current() !== current) return;
   $('#result-img').src = current.url;
   setPhase('ready');
+  syncVideo(ctx, current);
   if (gif.forFile !== current.file) startGif(ctx, current.file);
   renderTabs();
   autoSend(ctx);
   resumeStatus(ctx);
 }
 
+function currentFile(current) {
+  if (tab === 'video' && video.file) return video.file;
+  return gifReady() ? gif.file : current.file;
+}
+
 export async function download(ctx) {
   const current = ctx.result.current();
   if (!current) return;
-  const file = gifReady() ? gif.file : current.file;
+  const file = currentFile(current);
   if (ctx.state.template) {
     const templateId = ctx.state.template.id;
     logSessionOnce(ctx.state, () => sendJSON('POST', '/api/sessions', { template_id: templateId })).catch(() => {});
@@ -189,11 +227,13 @@ export async function download(ctx) {
 
 export function init(ctx) {
   initPanel(ctx);
-  setShareFileProvider(() => (gifReady() ? gif.file : null));
+  setShareFileProvider(() => (tab === 'video' ? video.file : gifReady() ? gif.file : null));
   $('#tab-photo').addEventListener('click', () => ((tab = 'photo'), renderTabs()));
   $('#tab-gif').addEventListener('click', () => ((tab = 'gif'), renderTabs()));
+  $('#tab-video').addEventListener('click', () => ((tab = 'video'), renderTabs()));
   ctx.onReset(() => {
     releaseGif();
+    releaseVideo();
     tab = 'photo';
     renderGif();
     renderTabs();
@@ -208,6 +248,11 @@ export function init(ctx) {
     ctx.result.invalidate();
     ctx.session.target = null;
     ctx.session.selected = 0;
+    // Ulang sesi: klip lama dibuang, urutan berikutnya merekam klip baru
+    ctx.recorder?.discard();
+    ctx.recorder = null;
+    Object.assign(ctx.session, { video: null, videoTried: false, videoPending: null });
+    releaseVideo();
     ctx.go('shoot');
   });
   $('#new-session').addEventListener('click', () => {

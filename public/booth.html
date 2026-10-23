@@ -165,6 +165,7 @@
             <div class="overlay-hole"><video id="video" playsinline muted autoplay></video></div>
             <img class="overlay-frame" alt="" draggable="false">
             <div class="countdown display" id="countdown" hidden aria-live="assertive"></div>
+            <div class="rec-badge" id="rec-badge" hidden data-i18n="booth.shoot.rec">● REC</div>
             <div class="flash" id="flash"></div>
             <div class="camera-error card" id="camera-error" hidden>
               <p id="camera-error-msg" role="alert"></p>
@@ -244,11 +245,16 @@
             <div class="result-tabs" role="group" data-i18n-attr="aria-label:booth.result.tabs">
               <button type="button" class="chip" id="tab-photo" aria-pressed="true" data-i18n="booth.result.tabPhoto">Foto</button>
               <button type="button" class="chip" id="tab-gif" aria-pressed="false" data-i18n="booth.result.tabGif">GIF</button>
+              <button type="button" class="chip" id="tab-video" aria-pressed="false" hidden data-i18n="booth.result.tabVideo">Video</button>
             </div>
             <img id="result-img" alt="Hasil photostrip" data-i18n-attr="alt:booth.result.alt" />
             <div id="gif-view" class="gif-view" hidden>
               <img id="gif-img" alt="GIF stop-motion" data-i18n-attr="alt:booth.result.gifAlt" />
               <p class="status-msg" id="gif-status" role="status"></p>
+            </div>
+            <div id="video-view" class="gif-view" hidden>
+              <video id="result-video" controls playsinline loop muted data-i18n-attr="aria-label:booth.result.videoAlt"></video>
+              <p class="status-msg" id="video-status" role="status"></p>
             </div>
           </div>
           <div class="result-actions card">

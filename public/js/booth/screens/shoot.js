@@ -9,6 +9,7 @@ import { beep, shutter } from '../../sound.js';
 import { shouldReview } from '../review-timer.js';
 import { initialMirror } from '../mirror.js';
 import { KEYS, read, write } from '../../storage.js';
+import { canRecord, createSessionRecorder, finishSessionRecording } from '../../media/recorder.js';
 
 export const MAX_PHOTO_SIDE = 1920;
 export const NEXT_SHOT_DELAY_MS = 800;
@@ -102,6 +103,7 @@ function syncControls() {
   $('#shoot').disabled = importing || !cameraReady;
   for (const c of $$('.shoot-tools button, .shoot-tools select, .gallery-input')) c.disabled = locked;
   $('#shoot-to-adjust').hidden = nextEmptySlot(ctxRef.state) >= 0;
+  $('#rec-badge').hidden = !ctxRef.recorder?.active();
 }
 
 function showCameraError(key) {
@@ -167,8 +169,18 @@ function recoverCamera() {
   else showCameraError('booth.shoot.cameraLost');
 }
 
+// Rekaman sesi dibuang bila urutan terhenti di tengah; urutan baru memulai klip baru.
+function discardRecorder() {
+  ctxRef.recorder?.discard();
+  ctxRef.recorder = null;
+  ctxRef.session.videoTried = false;
+}
+
 function cancelRun() {
-  if (runToken) runToken.cancelled = true;
+  if (runToken) {
+    runToken.cancelled = true;
+    discardRecorder();
+  }
   runToken = null;
   $('#countdown').hidden = true;
   if (ctxRef.state.template) syncControls();
@@ -179,10 +191,12 @@ async function countdown(seconds, token) {
   node.hidden = false;
   for (let s = seconds; s > 0; s--) {
     node.textContent = String(s);
+    ctxRef.recorder?.setOverlay({ count: s });
     beep(s === 1);
     await sleep(1000);
     if (token.cancelled) return false;
   }
+  ctxRef.recorder?.setOverlay({ count: null });
   node.hidden = true;
   return true;
 }
@@ -194,11 +208,27 @@ function flash() {
   f.classList.add('on');
 }
 
+// Klip dimulai di urutan pertama sesi; urutan lanjutan (setelah review) hanya melanjutkan.
+// Ulang foto dari layar Atur tidak merekam lagi: klip sesi dipertahankan.
+function startRecording(ctx) {
+  if (ctx.recorder) return ctx.recorder.resume();
+  const { session } = ctx;
+  if (session.video || session.videoTried || Number(ctx.settings.video_enabled) !== 1 || !canRecord()) return;
+  session.videoTried = true;
+  try {
+    ctx.recorder = createSessionRecorder({ video: $('#video'), mirror: isMirrored });
+    ctx.recorder.start();
+  } catch {
+    ctx.recorder = null; // video opsional: foto tetap jalan
+  }
+}
+
 async function runSequence() {
   const ctx = ctxRef;
   if (runToken || importing) return;
   const token = { cancelled: false };
   runToken = token;
+  startRecording(ctx);
   syncControls();
   ctx.idle?.pause();
   let idleResumed = false;
@@ -219,6 +249,7 @@ async function runSequence() {
         return recoverCamera();
       }
       flash();
+      ctx.recorder?.setOverlay({ count: null, flash: true });
       shutter();
       setPhoto(ctx, slot, camera.capture($('#video'), MAX_PHOTO_SIDE, { mirror: isMirrored() }));
       if (shouldReview(ctx.settings.review_seconds, 'camera')) {
@@ -237,6 +268,7 @@ async function runSequence() {
     syncControls();
     ctx.session.target = null;
     resumeIdle();
+    finishSessionRecording(ctx);
     ctx.go('adjust');
   } finally {
     resumeIdle();
@@ -356,6 +388,7 @@ export function init(ctx) {
   }
   $('#shoot-to-adjust').addEventListener('click', () => {
     ctx.session.target = null;
+    finishSessionRecording(ctx);
     ctx.go('adjust');
   });
   for (const input of $$('.gallery-input')) {

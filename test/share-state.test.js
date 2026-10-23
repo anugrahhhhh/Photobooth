@@ -211,3 +211,57 @@ test('attachGif: GIF untuk File lain atau setelah reset tidak diunggah', async (
   await new Promise((r) => setTimeout(r, 0));
   assert.equal(puts.length, 0);
 });
+
+test('attachVideo: diunggah setelah hasil dibuat untuk File yang sama, tidak ganda', async () => {
+  const { share, puts, reply } = setup();
+  const file = new File(['a'], 'a.jpg');
+  const blob = { size: 1 };
+  share.attachVideo(file, blob, 'webm');
+  const p = share.ensureResult(file, meta);
+  reply(0, 'AAA');
+  await p;
+  share.attachVideo(file, blob, 'webm');
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(puts, [{ token: 'AAA', key: 'k-AAA', kind: 'video', blob }]);
+});
+
+test('attachVideo: File lain atau setelah reset tidak diunggah', async () => {
+  const { share, puts, reply } = setup();
+  const file = new File(['a'], 'a.jpg');
+  const p = share.ensureResult(file, meta);
+  share.attachVideo(new File(['b'], 'b.jpg'), { size: 1 }, 'mp4');
+  reply(0, 'AAA');
+  await p;
+  share.reset();
+  share.attachVideo(file, { size: 3 }, 'mp4');
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(puts.length, 0);
+});
+
+test('attachVideo: 413 dilaporkan lewat onError, error lain diam-diam dan boleh diulang', async () => {
+  const puts = [];
+  let failWith = { status: 413 };
+  const api = {
+    createResult: async () => ({ token: 'T', key: 'k', url: 'u', expires_at: 'x' }),
+    putAsset: async (...args) => {
+      puts.push(args);
+      if (failWith) throw failWith;
+    },
+  };
+  const share = createShareSession({ api });
+  const file = new File(['a'], 'a.jpg');
+  await share.ensureResult(file, meta);
+  const errors = [];
+  share.attachVideo(file, { size: 1 }, 'webm', (e) => errors.push(e.status));
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(errors, [413]);
+  failWith = { status: 500 };
+  const blob2 = { size: 2 };
+  share.attachVideo(file, blob2, 'webm', (e) => errors.push(e.status));
+  await new Promise((r) => setTimeout(r, 0));
+  failWith = null;
+  share.attachVideo(file, { size: 3 }, 'webm');
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(errors, [413]);
+  assert.equal(puts.length, 3);
+});

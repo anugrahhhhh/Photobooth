@@ -36,6 +36,7 @@ export function createShareSession({ api = defaultApi, now = Date.now } = {}) {
   let entry = null; // { file, promise, result }
   let autoSentFor = null; // File yang sudah dikirim otomatis (hanya File pertama sesi)
   let gif = null; // { file, blob }: GIF terbaru; diunggah bila hasil server untuk File yang sama ada atau nanti dibuat
+  let video = null; // { file, blob, ext, onError }: video sesi, diperlakukan sama dengan GIF
 
   // Unggah GIF bila cocok dengan hasil ini. Opsional: gagal diam-diam, halaman hasil tetap menampilkan foto.
   async function pushGif(mine) {
@@ -47,6 +48,22 @@ export function createShareSession({ api = defaultApi, now = Date.now } = {}) {
       await api.putAsset(mine.result.token, mine.result.key, 'gif', g.blob);
     } catch {
       if (v === version && entry === mine) mine.gifSent = null; // boleh dicoba lagi
+    }
+  }
+
+  // Video opsional: gagal diam-diam, kecuali 413 (terlalu besar) yang dilaporkan lewat onError.
+  async function pushVideo(mine) {
+    const vd = video;
+    if (!vd || vd.file !== mine.file || !mine.result || mine.videoSent === vd.blob) return;
+    mine.videoSent = vd.blob;
+    const v = version;
+    const body = vd.blob instanceof Blob && !vd.blob.type ? new Blob([vd.blob], { type: `video/${vd.ext}` }) : vd.blob;
+    try {
+      await api.putAsset(mine.result.token, mine.result.key, 'video', body);
+    } catch (err) {
+      if (v !== version || entry !== mine) return;
+      if (err?.status === 413) vd.onError?.(err);
+      else mine.videoSent = null; // boleh dicoba lagi
     }
   }
 
@@ -65,6 +82,7 @@ export function createShareSession({ api = defaultApi, now = Date.now } = {}) {
         if (v === version && entry === mine) {
           mine.result = result;
           pushGif(mine);
+          pushVideo(mine);
         }
         return result;
       },
@@ -91,6 +109,12 @@ export function createShareSession({ api = defaultApi, now = Date.now } = {}) {
     if (entry && entry.file === file) pushGif(entry); // bila hasil belum jadi, ensureResult yang mengunggah
   }
 
+  function attachVideo(file, blob, ext, onError) {
+    if (video && video.file === file && video.blob === blob) return; // sudah dipasang untuk File ini
+    video = { file, blob, ext, onError };
+    if (entry && entry.file === file) pushVideo(entry);
+  }
+
   // Unggah dulu bila perlu, lalu antrekan. Reset di tengah jalan membatalkan kiriman.
   async function send(channel, to, { file, templateId = null, lang }) {
     const v = version;
@@ -111,6 +135,7 @@ export function createShareSession({ api = defaultApi, now = Date.now } = {}) {
     ensureResult,
     uploadAsset,
     attachGif,
+    attachVideo,
     send,
     deliveries,
     // Naik hanya saat reset: navigasi antar layar tidak membatalkan kiriman yang berjalan.
@@ -126,6 +151,7 @@ export function createShareSession({ api = defaultApi, now = Date.now } = {}) {
       entry = null;
       autoSentFor = null;
       gif = null;
+      video = null;
     },
   };
 }
