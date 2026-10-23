@@ -15,6 +15,8 @@ Salin `.env.example` menjadi `.env` lalu sesuaikan. `.env` dibaca otomatis oleh 
 | `UPLOAD_DIR` | `./uploads` | Template disimpan di `<UPLOAD_DIR>/templates`; harus berada di disk persisten |
 | `SESSION_SECRET` | — | Wajib di produksi, string acak panjang. Server menolak jalan jika kosong atau masih sama dengan contoh |
 | `TZ` | `Asia/Jakarta` | Dipakai untuk menghitung "sesi hari ini" |
+| `PUBLIC_URL` | — | Alamat publik booth, misalnya `https://photobooth-anugrah.fly.dev` (http/https, tanpa path dan tanpa garis miring akhir). Dipakai untuk QR dan tautan di email/WhatsApp. Wajib di produksi bila email atau WhatsApp diaktifkan |
+| `MAX_DELIVERIES_PER_DAY` | 400 | Batas total kiriman email + WhatsApp dalam 24 jam terakhir, di bawah batas Gmail (~500/hari) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | — | Pengiriman email; lihat bagian Kirim hasil |
 | `MAIL_TRANSPORT` | — | `json` hanya untuk dev/tes (email tidak dikirim) |
 | `WA_PHONE_NUMBER_ID`, `WA_ACCESS_TOKEN`, `WA_TEMPLATE_NAME`, `WA_TEMPLATE_LANG`, `WA_API_BASE` | — | WhatsApp Cloud API, opsional |
@@ -51,9 +53,10 @@ Tamu bisa menerima hasil lewat QR, email, atau WhatsApp. Foto, GIF, dan video ha
 
    ```bash
    fly secrets set SMTP_HOST=smtp.gmail.com SMTP_PORT=465 SMTP_USER=<alamat-gmail> SMTP_PASS=<sandi-aplikasi> SMTP_FROM="Photobooth <alamat-gmail>"
+   fly secrets set PUBLIC_URL=https://photobooth-anugrah.fly.dev
    ```
 
-   `SMTP_FROM` boleh dikosongkan; defaultnya `SMTP_USER`. Gmail membatasi sekitar 500 email per hari untuk akun biasa, jadi acara besar sebaiknya memakai layanan SMTP lain. Tombol "Kirim email tes" di admin membantu memastikan pengaturannya benar.
+   `SMTP_FROM` boleh dikosongkan; defaultnya `SMTP_USER`. Gmail membatasi sekitar 500 email per hari untuk akun biasa, jadi acara besar sebaiknya memakai layanan SMTP lain. Form "Kirim email uji" di halaman Pengaturan admin membantu memastikan pengaturannya benar.
 
 `MAIL_TRANSPORT=json` hanya untuk pengembangan dan tes: email tidak dikirim, hanya ditulis sebagai JSON. Jangan dipakai di produksi.
 
@@ -71,11 +74,13 @@ Tamu bisa menerima hasil lewat QR, email, atau WhatsApp. Foto, GIF, dan video ha
 
    `WA_API_BASE` bersifat opsional (default `https://graph.facebook.com/v21.0`) dan dipakai untuk tes dengan server tiruan. Bila salah satu `WA_*` utama kosong, opsi WhatsApp tidak muncul di booth.
 
-Pengiriman email dan WhatsApp lewat antrean di server dengan maksimal 3 percobaan, dan satu hasil bisa dikirim paling banyak 3 kali. Antrean hanya berjalan selama mesin menyala.
+Pengiriman email dan WhatsApp lewat antrean di server dengan maksimal 3 percobaan, dan satu hasil bisa dikirim paling banyak 3 kali. Seluruh booth dibatasi `MAX_DELIVERIES_PER_DAY` kiriman (default 400) dalam 24 jam terakhir; jumlahnya tampil di Pengaturan admin sebagai "Kiriman 24 jam". Antrean hanya berjalan selama mesin menyala.
+
+`PUBLIC_URL` wajib diisi di produksi bila email atau WhatsApp aktif (server menolak jalan tanpanya). Tautan di QR, email, dan WhatsApp selalu memakai alamat ini, bukan header Host dari browser, sehingga tautan tetap benar walau booth dibuka lewat `localhost` atau IP LAN dan tidak bisa dipalsukan.
 
 ### Privasi
 
-- **Masa simpan:** hasil dan file-nya dihapus otomatis setelah 7 hari. Admin juga bisa menghapus hasil lebih awal dari halaman hasil di admin.
+- **Masa simpan:** hasil dan file-nya dihapus otomatis setelah 7 hari. Admin juga bisa menghapus semua hasil sekaligus lebih awal lewat tombol "Hapus semua hasil" di halaman Pengaturan admin.
 - **Persetujuan:** tamu harus mencentang persetujuan sebelum apa pun diunggah. Tanpa persetujuan, hasil hanya ada di perangkat tamu dan bisa diunduh langsung.
 - **Kontak:** email dan nomor telepon hanya dipakai untuk mengirim hasil dan tidak dibagikan ke pihak lain selain penyedia pengiriman (SMTP dan Meta). Nilai env tidak pernah dikirim ke browser.
 - **Penyimpanan:** file ada di `UPLOAD_DIR` pada volume Fly. Server menolak unggahan baru (507) bila ruang disk hampir habis.
