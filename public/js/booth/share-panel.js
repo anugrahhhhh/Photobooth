@@ -77,19 +77,20 @@ export function setShareReady(value) {
 }
 
 // Status kiriman: selalu textContent, tidak pernah innerHTML.
-function renderDeliveries(ctx, list) {
+function renderDeliveries(ctx, list, stale = false) {
   const ul = $('#share-deliveries');
   ul.hidden = list.length === 0;
   ul.replaceChildren(
     ...list.map((d) => {
-      const statusKey = { sent: 'booth.share.sent', failed: 'booth.share.sendFailed' }[d.status] ?? 'booth.share.sending';
+      const active = d.status === 'queued' || d.status === 'sending';
+      const statusKey = { sent: 'booth.share.sent', failed: 'booth.share.sendFailed' }[d.status] ?? (stale ? 'booth.share.stale' : 'booth.share.sending');
       const label = el('span', { className: 'share-delivery-label', textContent: t(CHANNELS[d.channel]?.label ?? 'booth.share.send') });
       label.dataset.i18n = CHANNELS[d.channel]?.label ?? 'booth.share.send';
       const to = el('span', { className: 'share-delivery-to', textContent: String(d.to ?? '') });
       const st = el('span', { className: `share-delivery-status ${d.status}`, textContent: t(statusKey) });
       st.dataset.i18n = statusKey;
       const li = el('li', { className: 'share-delivery' }, label, to, st);
-      if (d.status === 'failed' && lastTo[d.channel]) {
+      if ((d.status === 'failed' || (stale && active)) && lastTo[d.channel]) {
         const retry = el('button', { type: 'button', className: 'btn', textContent: t('common.retry') });
         retry.dataset.i18n = 'common.retry';
         retry.addEventListener('click', () => sendTo(ctx, d.channel, lastTo[d.channel]));
@@ -114,9 +115,10 @@ function startPolling(ctx) {
       list = null;
     }
     if (gen !== pollGen || ctx.visit() !== visit) return;
-    if (list) renderDeliveries(ctx, list);
     const active = !list || list.some((d) => d.status === 'queued' || d.status === 'sending');
-    if (active && Date.now() - startedAt < POLL_MAX_MS) pollTimer = setTimeout(tick, POLL_MS);
+    const expired = Date.now() - startedAt >= POLL_MAX_MS;
+    if (list) renderDeliveries(ctx, list, active && expired);
+    if (active && !expired) pollTimer = setTimeout(tick, POLL_MS);
   };
   pollTimer = setTimeout(tick, 0);
 }
@@ -130,26 +132,31 @@ function errorKey(err) {
 async function sendTo(ctx, channel, to) {
   const current = ctx.result.current();
   if (!current || busy[channel]) return;
-  const visit = ctx.visit();
+  const epoch = ctx.share.epoch(); // batal hanya oleh reset sesi, bukan oleh pindah layar
   busy[channel] = true; // terkunci sinkron: ketukan kedua diabaikan
   syncButtons();
   setChannelErr(channel, null);
   lastTo[channel] = to;
   try {
     await ctx.share.send(channel, to, { file: current.file, templateId: ctx.state.template?.id ?? null, lang: getLang() });
-    if (ctx.visit() !== visit) return;
-    startPolling(ctx);
+    if (ctx.share.epoch() !== epoch) return;
+    if (ctx.screen() === 'result') startPolling(ctx);
   } catch (err) {
-    if (ctx.visit() !== visit || err.status === undefined) return; // reset di tengah jalan
+    if (ctx.share.epoch() !== epoch || err.status === undefined) return; // reset di tengah jalan
     if (err.status === 507) setChannelErr(channel, 'booth.share.full');
     else if (err.status === 422) setChannelErr(channel, channel === 'email' ? 'booth.share.invalidEmail' : 'booth.share.invalidPhone');
     else setChannelErr(channel, errorKey(err));
   } finally {
-    if (ctx.visit() === visit) {
+    if (ctx.share.epoch() === epoch) {
       busy[channel] = false;
       syncButtons();
     }
   }
+}
+
+// Kembali ke layar Hasil (Atur membuat File baru): tampilkan lagi status kiriman sesi ini.
+export function resumeStatus(ctx) {
+  if (ctx.share.current()) startPolling(ctx);
 }
 
 // Kirim otomatis dari kontak awal: sekali, hanya untuk File pertama sesi.

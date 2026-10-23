@@ -90,6 +90,8 @@ export function createShareSession({ api = defaultApi, now = Date.now } = {}) {
     uploadAsset,
     send,
     deliveries,
+    // Naik hanya saat reset: navigasi antar layar tidak membatalkan kiriman yang berjalan.
+    epoch: () => version,
     claimAutoSend(file) {
       if (autoSentFor) return false;
       autoSentFor = file;

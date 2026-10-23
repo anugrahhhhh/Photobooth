@@ -160,3 +160,15 @@ test('kirim otomatis hanya untuk File pertama sesi, dan dibuka lagi oleh reset',
   share.reset();
   assert.equal(share.claimAutoSend(b), true);
 });
+
+test('epoch naik hanya saat reset, tidak oleh hasil baru', async () => {
+  const { share, reply } = setup();
+  const file = new File(['a'], 'a.jpg');
+  const e0 = share.epoch();
+  const p = share.ensureResult(file, meta);
+  reply(0, 'AAA');
+  await p;
+  assert.equal(share.epoch(), e0);
+  share.reset();
+  assert.equal(share.epoch(), e0 + 1);
+});

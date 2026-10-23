@@ -18,6 +18,11 @@ function start(ctx) {
   if (ctx.kiosk() && document.fullscreenEnabled && !document.fullscreenElement) {
     document.documentElement.requestFullscreen().catch(() => {});
   }
+  goFirst(ctx);
+}
+
+// Layar pertama sesi: kontak bila diminta dan ada layanan aktif, selain itu pilih template.
+export function goFirst(ctx) {
   const s = ctx.settings;
   const anyService = Boolean(s.share_email || s.share_whatsapp);
   if (Number(s.contact_before) === 1 && anyService) ctx.go('contact');

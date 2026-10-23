@@ -109,6 +109,7 @@ export default {
   'booth.share.sendFailed': "Failed to send",
   'booth.share.limit': "Send limit reached. Please ask the staff.",
   'booth.share.serviceOff': "Sending is currently unavailable.",
+  'booth.share.stale': "Still processing, check back later",
   'booth.share.sendError': "Could not send. Try again.",
   'booth.contact.title': "Send the result to you?",
   'booth.contact.hint': "Fill in one or both. The result is sent automatically when your session ends.",

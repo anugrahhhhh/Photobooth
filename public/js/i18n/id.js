@@ -109,6 +109,7 @@ export default {
   'booth.share.sendFailed': "Gagal mengirim",
   'booth.share.limit': "Batas kiriman tercapai. Hubungi petugas.",
   'booth.share.serviceOff': "Layanan pengiriman sedang tidak aktif.",
+  'booth.share.stale': "Masih diproses, cek lagi nanti",
   'booth.share.sendError': "Gagal mengirim. Coba lagi.",
   'booth.contact.title': "Kirim hasilnya ke kamu?",
   'booth.contact.hint': "Isi salah satu atau keduanya. Hasil dikirim otomatis setelah sesi selesai.",

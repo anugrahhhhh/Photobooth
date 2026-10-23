@@ -4,9 +4,10 @@ import { sendJSON } from '../../api.js';
 import { filteredCanvas } from '../../filters.js';
 import { releaseCanvas, resetPhotos, logSessionOnce } from '../../state.js';
 import { render } from '../../strip.js';
+import { goFirst } from './welcome.js';
 import { clearFilteredCache } from './adjust.js';
 import { resultButtonState } from '../result-view.js';
-import { autoSend, enterPanel, initPanel, leavePanel, setShareReady } from '../share-panel.js';
+import { autoSend, resumeStatus, enterPanel, initPanel, leavePanel, setShareReady } from '../share-panel.js';
 
 let phase = 'preparing';
 
@@ -80,6 +81,7 @@ async function enterResult(ctx) {
   $('#result-img').src = current.url;
   setPhase('ready');
   autoSend(ctx);
+  resumeStatus(ctx);
 }
 
 export async function download(ctx) {
@@ -138,7 +140,7 @@ export function init(ctx) {
   $('#new-session').addEventListener('click', () => {
     ctx.resetSession();
     if (ctx.kiosk()) ctx.go('welcome');
-    else ctx.go('pick', { mode: 'start' });
+    else goFirst(ctx);
   });
 }
 
