@@ -2,6 +2,19 @@ import { $, setStatus, adminApi } from '../common.js';
 
 const PIN_RE = /^\d{4,8}$/;
 
+// Satuan 1024; angka dibulatkan agar mudah dibaca ("310 MB", "1,5 GB").
+export function formatBytes(n) {
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let v = n;
+  let i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
+  const text = i === 0 || v >= 100 ? String(Math.round(v)) : v.toFixed(1).replace('.0', '').replace('.', ',');
+  return `${text} ${units[i]}`;
+}
+
 export async function init() {
   const form = $('#settings-form');
   const status = $('#settings-status');
@@ -82,6 +95,8 @@ export async function init() {
     }
   });
 
+  initResults();
+
   pinDelete.addEventListener('click', async () => {
     if (!confirm('Hapus PIN kiosk?')) return;
     setStatus(status, '');
@@ -94,4 +109,66 @@ export async function init() {
       setStatus(pinStatus, err.message, 'error');
     }
   });
+}
+
+function initResults() {
+  const storageLine = $('#storage-line');
+  const delBtn = $('#results-delete');
+  const delStatus = $('#results-status');
+  const testForm = $('#test-email-form');
+  const testStatus = $('#test-email-status');
+  const testBtn = $('#test-email-send');
+
+  const svc = (node, on) => {
+    node.textContent = on ? 'Aktif ✓' : 'Belum diatur';
+  };
+
+  const load = async () => {
+    try {
+      const s = await adminApi.get('/api/admin/results/summary');
+      svc($('#svc-email'), s.services.email);
+      svc($('#svc-whatsapp'), s.services.whatsapp);
+      testBtn.disabled = !s.services.email;
+      storageLine.textContent = `${s.count} hasil · ${formatBytes(s.bytes)} dari ${formatBytes(s.disk_total)}`;
+      delBtn.disabled = s.count === 0;
+    } catch (err) {
+      storageLine.textContent = '–';
+      setStatus(delStatus, err.message, 'error');
+    }
+  };
+
+  testForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const to = $('#test-email').value.trim();
+    if (!to) {
+      setStatus(testStatus, 'Isi alamat email tujuan', 'error');
+      return;
+    }
+    testBtn.disabled = true;
+    setStatus(testStatus, 'Mengirim…');
+    try {
+      await adminApi.json('POST', '/api/admin/test-email', { to });
+      setStatus(testStatus, `Email uji terkirim ke ${to}`, 'ok');
+    } catch (err) {
+      setStatus(testStatus, err.message, 'error');
+    } finally {
+      testBtn.disabled = false;
+    }
+  });
+
+  delBtn.addEventListener('click', async () => {
+    if (!confirm('Hapus semua hasil tamu? Tautan yang sudah dikirim tidak akan bisa dibuka lagi.')) return;
+    delBtn.disabled = true;
+    setStatus(delStatus, '');
+    try {
+      await adminApi.json('DELETE', '/api/admin/results');
+      await load();
+      setStatus(delStatus, 'Semua hasil dihapus', 'ok');
+    } catch (err) {
+      setStatus(delStatus, err.message, 'error');
+      delBtn.disabled = false;
+    }
+  });
+
+  load();
 }

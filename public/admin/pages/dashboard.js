@@ -14,6 +14,12 @@ export async function init() {
   };
 
   await refresh();
+  try {
+    const { deliveries_7d: d } = await adminApi.get('/api/admin/results/summary');
+    $('#stat-deliveries').textContent = `${d.sent} berhasil · ${d.failed} gagal`;
+  } catch (err) {
+    setStatus(status, err.message, 'error');
+  }
 }
 
 function renderStats(stats) {

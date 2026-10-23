@@ -69,6 +69,33 @@
         </div>
       </form>
 
+      <section class="card section" id="results-card">
+        <h2>Layanan &amp; penyimpanan</h2>
+        <div class="settings-form">
+          <dl class="service-list">
+            <div><dt>Email</dt><dd id="svc-email">Memuat…</dd></div>
+            <div><dt>WhatsApp</dt><dd id="svc-whatsapp">Memuat…</dd></div>
+          </dl>
+          <form id="test-email-form" class="field" novalidate>
+            <label for="test-email">Kirim email uji</label>
+            <div class="pin-row">
+              <input id="test-email" class="input" name="to" type="email" autocomplete="email" placeholder="nama@contoh.com" />
+              <button type="submit" id="test-email-send" class="btn btn-primary">Kirim uji</button>
+            </div>
+          </form>
+          <p id="test-email-status" class="status-msg" role="status"></p>
+          <div class="field">
+            <label>Penyimpanan hasil</label>
+            <p id="storage-line" class="storage-line">Memuat…</p>
+            <span class="hint">Hasil tamu dihapus otomatis setelah 7 hari.</span>
+          </div>
+          <div>
+            <button type="button" id="results-delete" class="btn btn-danger" disabled>Hapus semua hasil</button>
+          </div>
+          <p id="results-status" class="status-msg" role="status"></p>
+        </div>
+      </section>
+
       <section class="card section">
         <h2>PIN kiosk</h2>
         <div class="settings-form">

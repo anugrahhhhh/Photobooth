@@ -21,6 +21,7 @@ import { createResultsStore } from './lib/results-store.js';
 import { createDeliveryQueue } from './lib/delivery-queue.js';
 import { createMailer } from './lib/mailer.js';
 import { createWhatsApp } from './lib/whatsapp.js';
+import { adminResultsRouter } from './routes/admin-results.js';
 import { checkOrigin } from './middleware/checkOrigin.js';
 
 const SqliteStore = SqliteStoreFactory(session);
@@ -140,6 +141,10 @@ export function createApp({ config, db, storage, now = () => new Date(), extraRo
   app.use('/api/admin/stats', adminStatsRouter({ db, tz: config.tz, now }));
   app.use('/api/admin/settings', adminSettingsRouter({ db }));
   app.use('/api/admin/kiosk-pin', kioskAdminRouter({ db }));
+  app.use(
+    '/api/admin',
+    adminResultsRouter({ store: results, queue, services, mailer: senders.email, secrets: [config.mail?.pass, config.whatsapp?.token] }),
+  );
 
   app.use('/api/templates', publicTemplatesRouter({ db, storage }));
   app.use('/api/sessions', sessionsRouter({ db }));

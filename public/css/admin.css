@@ -66,9 +66,10 @@ h2 { font-size: 18px; font-weight: 700; }
 input[type="file"].input { padding: 8px 10px; }
 
 /* Statistik */
-.stats { display: grid; gap: 14px; margin-top: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.stats { display: grid; gap: 14px; margin-top: 12px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
 .stat .value { font-size: 28px; font-weight: 700; line-height: 1.2; }
 .stat .label { color: var(--muted); font-size: 13px; }
+.stat #stat-deliveries { font-size: 20px; line-height: 1.5; }
 .stat .value-text { font-size: 20px; line-height: 1.5; overflow-wrap: anywhere; }
 .dash-grid { display: grid; gap: 14px; margin-top: 14px; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); align-items: start; }
 .dash-grid .section { margin-top: 0; }
@@ -173,7 +174,15 @@ label.check { display: flex; align-items: center; gap: 12px; }
   .shell-nav { display: none; padding: 8px 0 4px; }
   .shell-nav.open { display: flex; }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat-wide { grid-column: 1 / -1; }
   .dash-grid { grid-template-columns: minmax(0, 1fr); }
   .slot-row { grid-template-columns: 1.5em repeat(4, minmax(0, 1fr)); }
   .slot-actions { grid-column: 2 / -1; }
 }
+
+/* Hasil & Kirim */
+.service-list { display: grid; gap: 8px; margin: 0; }
+.service-list > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.service-list dt { font-weight: 600; font-size: 14px; }
+.service-list dd { margin: 0; color: var(--muted); font-size: 14px; }
+.storage-line { margin: 0; font-size: 14px; }
