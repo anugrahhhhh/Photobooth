@@ -14,7 +14,7 @@ export function canRecord(win = globalThis) {
 
 // Merekam kanvas yang digambar dari <video> kamera, lengkap dengan angka hitung mundur dan kilatan.
 // Jeda (review) menghentikan penggambaran dan perekaman; batas maxMs dihitung dari waktu rekam aktif.
-export function createSessionRecorder({ video, mirror, maxMs = 90000, fps = 24, maxSide = 1280 }) {
+export function createSessionRecorder({ video, mirror, maxMs = 90000, fps = 24, maxSide = 1280, onStateChange = () => {} }) {
   const picked = pickVideoMime((m) => MediaRecorder.isTypeSupported(m));
   if (!picked) throw new Error('Perekaman video tidak didukung');
   const baseMime = picked.mime.split(';')[0];
@@ -34,6 +34,8 @@ export function createSessionRecorder({ video, mirror, maxMs = 90000, fps = 24, 
   let result = null; // promise hasil stop()
   let overlay = { count: null, flash: false };
   let flashAt = 0;
+  let settle = null; // penyelesai stop() yang sedang berjalan; discard() menutupnya dengan null
+  let waitTimer = 0; // jeda/stop yang menunggu jendela kilatan selesai tergambar
 
   function sizeCanvas() {
     const vw = video.videoWidth;
@@ -49,6 +51,10 @@ export function createSessionRecorder({ video, mirror, maxMs = 90000, fps = 24, 
     raf = requestAnimationFrame(draw);
     if (now - lastDraw < 1000 / fps - 1) return;
     lastDraw = now;
+    paint();
+  }
+
+  function paint() {
     if (!canvas.width && !sizeCanvas()) return;
     const { width: w, height: h } = canvas;
     c2d.fillStyle = '#111';
@@ -90,8 +96,12 @@ export function createSessionRecorder({ video, mirror, maxMs = 90000, fps = 24, 
     remaining = Math.max(0, remaining - (performance.now() - armedAt));
   }
 
+  // Sisa jendela kilatan (maks FLASH_MS): jeda dan stop menunggunya agar kilatan ikut terekam.
+  const flashLeftMs = () => (rec && !finished ? Math.max(0, FLASH_MS - (performance.now() - flashAt)) : 0);
+
   function cleanup() {
     finished = true;
+    clearTimeout(waitTimer);
     cancelAnimationFrame(raf);
     clearTimeout(timer);
     stream?.getTracks().forEach((tr) => tr.stop());
@@ -111,38 +121,64 @@ export function createSessionRecorder({ video, mirror, maxMs = 90000, fps = 24, 
       arm();
     },
     pause() {
-      if (!rec || finished || paused) return;
+      if (!rec || finished || paused || waitTimer) return;
+      const wait = flashLeftMs();
+      if (wait > 0) {
+        waitTimer = setTimeout(() => {
+          waitTimer = 0;
+          api.pause();
+        }, wait + 40);
+        return;
+      }
       paused = true;
       disarm();
       cancelAnimationFrame(raf);
       if (rec.state === 'recording') rec.pause();
+      onStateChange();
     },
     resume() {
+      if (waitTimer) {
+        clearTimeout(waitTimer); // jeda tertunda dibatalkan: tetap merekam
+        waitTimer = 0;
+      }
       if (!rec || finished || !paused) return;
       paused = false;
       if (rec.state === 'paused') rec.resume();
       raf = requestAnimationFrame(draw);
       arm();
+      onStateChange();
     },
     setOverlay({ count = null, flash = false } = {}) {
       overlay = { count, flash };
-      if (flash) flashAt = performance.now();
+      if (flash) {
+        flashAt = performance.now();
+        if (rec && !finished && !paused) paint(); // bingkai kilatan langsung tergambar
+      }
     },
     stop() {
       if (result) return result;
       result = new Promise((resolve) => {
         if (!rec || finished) return resolve(null);
-        rec.onstop = () => {
-          const out = chunks.length ? { blob: new Blob(chunks, { type: baseMime }), ext: picked.ext } : null;
-          cleanup();
-          resolve(out);
+        settle = resolve;
+        const doStop = () => {
+          waitTimer = 0;
+          rec.onstop = () => {
+            const out = chunks.length ? { blob: new Blob(chunks, { type: baseMime }), ext: picked.ext } : null;
+            cleanup();
+            resolve(out);
+            onStateChange();
+          };
+          rec.onerror = () => {
+            cleanup();
+            resolve(null);
+          };
+          if (rec.state === 'inactive') rec.onstop();
+          else rec.stop();
         };
-        rec.onerror = () => {
-          cleanup();
-          resolve(null);
-        };
-        if (rec.state === 'inactive') rec.onstop();
-        else rec.stop();
+        clearTimeout(waitTimer);
+        const wait = flashLeftMs();
+        if (wait > 0) waitTimer = setTimeout(doStop, wait + 40);
+        else doStop();
       });
       return result;
     },
@@ -155,7 +191,10 @@ export function createSessionRecorder({ video, mirror, maxMs = 90000, fps = 24, 
       }
       chunks.length = 0;
       cleanup();
+      const pending = result;
       result = Promise.resolve(null);
+      if (pending) settle?.(null);
+      onStateChange();
     },
     active: () => Boolean(rec) && !finished && !paused,
   };

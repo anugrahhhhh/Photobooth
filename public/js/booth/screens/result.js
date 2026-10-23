@@ -269,5 +269,6 @@ export function enter(ctx) {
 
 export function leave() {
   leavePanel();
+  $('#result-video').pause(); // video yang tersembunyi tidak ikut mendekode
   $('#result-img').removeAttribute('src');
 }

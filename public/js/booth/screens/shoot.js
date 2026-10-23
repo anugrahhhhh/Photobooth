@@ -216,7 +216,11 @@ function startRecording(ctx) {
   if (session.video || session.videoTried || Number(ctx.settings.video_enabled) !== 1 || !canRecord()) return;
   session.videoTried = true;
   try {
-    ctx.recorder = createSessionRecorder({ video: $('#video'), mirror: isMirrored });
+    ctx.recorder = createSessionRecorder({
+      video: $('#video'),
+      mirror: isMirrored,
+      onStateChange: () => ($('#rec-badge').hidden = !ctx.recorder?.active()),
+    });
     ctx.recorder.start();
   } catch {
     ctx.recorder = null; // video opsional: foto tetap jalan
