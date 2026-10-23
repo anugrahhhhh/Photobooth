@@ -15,6 +15,9 @@ Salin `.env.example` menjadi `.env` lalu sesuaikan. `.env` dibaca otomatis oleh 
 | `UPLOAD_DIR` | `./uploads` | Template disimpan di `<UPLOAD_DIR>/templates`; harus berada di disk persisten |
 | `SESSION_SECRET` | — | Wajib di produksi, string acak panjang. Server menolak jalan jika kosong atau masih sama dengan contoh |
 | `TZ` | `Asia/Jakarta` | Dipakai untuk menghitung "sesi hari ini" |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | — | Pengiriman email; lihat bagian Kirim hasil |
+| `MAIL_TRANSPORT` | — | `json` hanya untuk dev/tes (email tidak dikirim) |
+| `WA_PHONE_NUMBER_ID`, `WA_ACCESS_TOKEN`, `WA_TEMPLATE_NAME`, `WA_TEMPLATE_LANG`, `WA_API_BASE` | — | WhatsApp Cloud API, opsional |
 | `NODE_ENV` | `development` | `production` mengaktifkan cookie `secure`, `trust proxy`, dan `upgrade-insecure-requests` |
 
 Contoh membuat secret: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
@@ -36,6 +39,47 @@ Landing: `http://localhost:3000/`. Booth: `http://localhost:3000/booth`. Admin: 
 - Ganti password: `npm run seed:admin -- --reset <user> <pass>`
 - Template contoh (aktif, 3 slot lanskap): `npm run seed:sample`
 
+## Kirim hasil
+
+Tamu bisa menerima hasil lewat QR, email, atau WhatsApp. Foto, GIF, dan video hanya diunggah ke server setelah tamu menyetujui di layar hasil; tombol Unduh tidak pernah mengunggah apa pun. Tiap hasil punya halaman publik `/p/<token>` yang berlaku 7 hari.
+
+### Email (Gmail)
+
+1. Aktifkan verifikasi 2 langkah di akun Google yang akan dipakai mengirim.
+2. Buka Akun Google > Keamanan > Sandi aplikasi, buat sandi baru (16 karakter, tanpa spasi).
+3. Isi rahasia di Fly:
+
+   ```bash
+   fly secrets set SMTP_HOST=smtp.gmail.com SMTP_PORT=465 SMTP_USER=<alamat-gmail> SMTP_PASS=<sandi-aplikasi> SMTP_FROM="Photobooth <alamat-gmail>"
+   ```
+
+   `SMTP_FROM` boleh dikosongkan; defaultnya `SMTP_USER`. Gmail membatasi sekitar 500 email per hari untuk akun biasa, jadi acara besar sebaiknya memakai layanan SMTP lain. Tombol "Kirim email tes" di admin membantu memastikan pengaturannya benar.
+
+`MAIL_TRANSPORT=json` hanya untuk pengembangan dan tes: email tidak dikirim, hanya ditulis sebagai JSON. Jangan dipakai di produksi.
+
+### WhatsApp Cloud API (opsional)
+
+1. Buat aplikasi di [Meta for Developers](https://developers.facebook.com/) (tipe Business), lalu tambahkan produk **WhatsApp**.
+2. Daftarkan nomor bisnis dan catat **Phone number ID**.
+3. Buat token akses permanen lewat System User di Meta Business Settings (token sementara kedaluwarsa dalam 24 jam).
+4. Buat template pesan berkategori **Utility** dengan header **gambar** dan **satu variabel body** (`{{1}}`) untuk link hasil. Tunggu sampai statusnya disetujui.
+5. Isi rahasia:
+
+   ```bash
+   fly secrets set WA_PHONE_NUMBER_ID=<phone-number-id> WA_ACCESS_TOKEN=<token> WA_TEMPLATE_NAME=<nama-template> WA_TEMPLATE_LANG=id
+   ```
+
+   `WA_API_BASE` bersifat opsional (default `https://graph.facebook.com/v21.0`) dan dipakai untuk tes dengan server tiruan. Bila salah satu `WA_*` utama kosong, opsi WhatsApp tidak muncul di booth.
+
+Pengiriman email dan WhatsApp lewat antrean di server dengan maksimal 3 percobaan, dan satu hasil bisa dikirim paling banyak 3 kali. Antrean hanya berjalan selama mesin menyala.
+
+### Privasi
+
+- **Masa simpan:** hasil dan file-nya dihapus otomatis setelah 7 hari. Admin juga bisa menghapus hasil lebih awal dari halaman hasil di admin.
+- **Persetujuan:** tamu harus mencentang persetujuan sebelum apa pun diunggah. Tanpa persetujuan, hasil hanya ada di perangkat tamu dan bisa diunduh langsung.
+- **Kontak:** email dan nomor telepon hanya dipakai untuk mengirim hasil dan tidak dibagikan ke pihak lain selain penyedia pengiriman (SMTP dan Meta). Nilai env tidak pernah dikirim ke browser.
+- **Penyimpanan:** file ada di `UPLOAD_DIR` pada volume Fly. Server menolak unggahan baru (507) bila ruang disk hampir habis.
+
 ## Backup
 
 `npm run backup` menyalin database **dan** folder `uploads/templates` bersama-sama ke `backups/<YYYY-MM-DD-HHmmss>/`. Keduanya harus selalu dipulihkan bersama, karena database menyimpan nama file template.
@@ -56,7 +100,7 @@ Landing: `http://localhost:3000/`. Booth: `http://localhost:3000/booth`. Admin: 
 
 **Deploy otomatis dari GitHub:** buat token dengan `fly tokens create deploy`, lalu simpan di GitHub repo → **Settings → Secrets and variables → Actions → New repository secret** dengan nama `FLY_API_TOKEN`. Setelah itu, setiap push ke cabang `feat/redesign-kiosk` menjalankan `npm test` lalu deploy (`.github/workflows/fly-deploy.yml`). Tanpa token, langkah deploy dilewati.
 
-Mesin berhenti otomatis saat sepi untuk menghemat biaya, sehingga kunjungan pertama butuh beberapa detik untuk menyala. Untuk acara, ubah `min_machines_running = 1` di `fly.toml` lalu deploy ulang.
+Mesin berhenti otomatis saat sepi untuk menghemat biaya, sehingga kunjungan pertama butuh beberapa detik untuk menyala. Untuk acara, ubah `min_machines_running = 1` di `fly.toml` lalu deploy ulang. Ini wajib bila tamu mengirim lewat email atau WhatsApp, karena worker pengiriman hanya berjalan saat mesin menyala.
 
 ### Render
 

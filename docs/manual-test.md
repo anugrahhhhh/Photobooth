@@ -47,6 +47,12 @@ Isi tiap sel dengan ✅ (lolos), ❌ (gagal, tulis catatan di bawah), atau – (
 | 32 | `localStorage` diblokir (mode privat atau data situs diblokir): satu sesi penuh tetap selesai | ✅ (otomatis, storage dibuat melempar) | | | |
 | 33 | Bahasa dan tema dari landing terbawa ke booth; admin tetap Indonesia dan mengikuti tema | ✅ (otomatis) | | | |
 | 34 | Tidak ada scroll horizontal dan tidak ada error konsol/CSP di landing, booth, dan admin pada 390, 820, dan 1440 px | ✅ (otomatis) | | | |
+| 35 | Email ke Gmail sungguhan: terkirim, gambar tampil, link `/p/...` terbuka; cek juga folder spam | | | | |
+| 36 | WhatsApp sungguhan setelah template disetujui: pesan masuk dengan gambar header dan link | | | | |
+| 37 | Scan QR di layar hasil dengan HP: halaman `/p/...` terbuka dan ketiga file bisa diunduh | | | | |
+| 38 | Video hasil di iPhone Safari dan Chrome Android: diputar, bisa diunduh/disimpan | | | | |
+| 39 | GIF hasil di HP lama: tampil dan bergerak | | | | |
+| 40 | Kiriman saat mesin Fly baru menyala dari keadaan berhenti: tetap terkirim (cek `min_machines_running`) | | | | |
 
 "Otomatis" berarti diuji dengan Chrome headless dan kamera palsu (`--use-fake-device-for-media-stream`) pada 2026-10-12 (baris 1-20) dan 2026-10-21 (baris 1, 26, 29-34). Uji ulang di perangkat sungguhan tetap diperlukan.
 
