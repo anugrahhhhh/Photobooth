@@ -5,7 +5,6 @@ import { applyI18n, onLangChange, setLang, getLang, t } from './i18n.js';
 
 const POLL_MS = 5000;
 const POLL_MAX_AGE_MS = 10 * 60_000;
-const RESULT_TTL_MS = 7 * 24 * 60 * 60_000; // sama dengan RESULT_TTL_DAYS di server
 
 const $ = (sel) => document.querySelector(sel);
 const token = location.pathname.split('/').filter(Boolean)[1] ?? '';
@@ -62,9 +61,13 @@ function showResult(data) {
   renderText();
 }
 
+// Hasil muda dan GIF atau video belum ada. Batas 10 menit juga membatasi kasus video dimatikan.
+function isYoung() {
+  return Date.now() - new Date(result.created_at).getTime() < POLL_MAX_AGE_MS;
+}
+
 function needsPolling() {
-  const age = Date.now() - (new Date(result.expires_at).getTime() - RESULT_TTL_MS);
-  return !result.gif_url && age < POLL_MAX_AGE_MS;
+  return (!result.gif_url || !result.video_url) && isYoung();
 }
 
 async function load(first) {
@@ -77,7 +80,7 @@ async function load(first) {
     if (err.status === 410) showMessage('result.deleted');
     else if (err.status === 404) showMessage('result.notFound');
     else if (first) showMessage('result.error');
-    else pollTimer = setTimeout(() => load(false), POLL_MS); // gangguan jaringan sesaat saat polling
+    else if (result && isYoung()) pollTimer = setTimeout(() => load(false), POLL_MS); // gangguan sesaat; berhenti setelah 10 menit
   }
 }
 

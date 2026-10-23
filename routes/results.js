@@ -91,6 +91,7 @@ export function resultsApiRouter({ store, queue = null, services = { email: fals
     const row = liveResult(store, req.params.token);
     const base = `/r/${row.token}`;
     res.json({
+      created_at: row.created_at,
       expires_at: row.expires_at,
       lang: row.lang,
       photo_url: `${base}/photo.jpg`,

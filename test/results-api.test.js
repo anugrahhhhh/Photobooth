@@ -105,6 +105,7 @@ test('GET: token acak valid 404, respons tidak memuat key/key_hash', async () =>
   const res = await request(t.app).get(`/api/results/${token}`);
   assert.equal(res.status, 200);
   assert.ok(!/key/i.test(JSON.stringify(res.body)));
+  assert.equal(new Date(res.body.created_at).toISOString(), res.body.created_at);
   assert.equal(res.body.photo_url, `/r/${token}/photo.jpg`);
 });
 
