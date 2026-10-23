@@ -132,8 +132,10 @@ async function pickTemplate(tpl) {
         if (!ok || !picking.isCurrent(token) || ctx.visit() !== visit) return;
       }
     } else {
+      // kontak dan persetujuan dari layar awal harus selamat dari reset ini
+      const { contact, consent } = ctx.session;
       ctx.resetSession();
-      ctx.session.pickMode = 'start';
+      Object.assign(ctx.session, { pickMode: 'start', contact, consent });
     }
     const { session } = ctx;
     session.templateImg = img;

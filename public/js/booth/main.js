@@ -12,13 +12,14 @@ import { createWakeLock } from '../wake-lock.js';
 import { createResultStore } from './result-store.js';
 import { createShareSession } from './share.js';
 import * as welcome from './screens/welcome.js';
+import * as contact from './screens/contact.js';
 import * as pick from './screens/pick.js';
 import * as shoot from './screens/shoot.js';
 import * as review from './screens/review.js';
 import * as adjust from './screens/adjust.js';
 import * as result from './screens/result.js';
 
-const SCREENS = { welcome, pick, shoot, review, adjust, result };
+const SCREENS = { welcome, contact, pick, shoot, review, adjust, result };
 const STEPS = ['pick', 'shoot', 'adjust', 'result'];
 const DEFAULT_SETTINGS = {
   countdown_seconds: 3,
@@ -31,7 +32,7 @@ const DEFAULT_SETTINGS = {
 };
 
 const IDLE_WARN_MS = 10_000;
-const newSession = () => ({ templateImg: null, target: null, selected: 0, pickMode: 'start', consent: false });
+const newSession = () => ({ templateImg: null, target: null, selected: 0, pickMode: 'start', consent: false, contact: null });
 
 function createCtx(settings) {
   const state = createState();

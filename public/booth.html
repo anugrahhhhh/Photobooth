@@ -122,6 +122,31 @@
         </div>
       </section>
 
+      <section data-screen="contact" hidden>
+        <div class="contact card card-lg">
+          <h2 class="display" id="contact-title" tabindex="-1" data-i18n="booth.contact.title">Kirim hasilnya ke kamu?</h2>
+          <p data-i18n="booth.contact.hint">Isi salah satu atau keduanya. Hasil dikirim otomatis setelah sesi selesai.</p>
+          <div class="contact-field" id="contact-wa-field" hidden>
+            <label for="contact-wa" data-i18n="booth.share.whatsapp">WhatsApp</label>
+            <input class="input" id="contact-wa" type="tel" inputmode="tel" autocomplete="off" maxlength="24" />
+            <p class="status-msg error" id="contact-wa-err" role="alert"></p>
+          </div>
+          <div class="contact-field" id="contact-email-field" hidden>
+            <label for="contact-email" data-i18n="booth.share.email">Email</label>
+            <input class="input" id="contact-email" type="email" inputmode="email" autocomplete="off" maxlength="254" />
+            <p class="status-msg error" id="contact-email-err" role="alert"></p>
+          </div>
+          <label class="contact-consent">
+            <input type="checkbox" id="contact-consent" />
+            <span data-i18n="booth.share.consent">Foto disimpan di server selama 7 hari agar bisa dikirim ke kamu.</span>
+          </label>
+          <div class="row contact-actions">
+            <button type="button" class="btn btn-primary btn-lg" id="contact-next" disabled data-i18n="booth.contact.next">Lanjut</button>
+            <button type="button" class="btn btn-lg" id="contact-skip" data-i18n="booth.contact.skip">Lewati</button>
+          </div>
+        </div>
+      </section>
+
       <section data-screen="pick" hidden>
         <div class="screen-head">
           <h2 class="display" id="pick-title" tabindex="-1" data-i18n="booth.pick.title">Pilih template</h2>
@@ -230,6 +255,23 @@
                 <button type="button" class="btn" id="share-qr" disabled data-i18n="booth.share.qr">QR</button>
                 <button type="button" class="btn" id="share-native" hidden data-i18n="booth.share.native">Bagikan</button>
               </div>
+              <form class="share-form" id="share-email-form" novalidate hidden>
+                <div class="row">
+                  <label class="visually-hidden" for="share-email" data-i18n="booth.share.email">Email</label>
+                  <input class="input" id="share-email" type="email" inputmode="email" autocomplete="off" maxlength="254" placeholder="Email" data-i18n-attr="placeholder:booth.share.email" />
+                  <button type="submit" class="btn btn-primary" id="share-email-send" disabled data-i18n="booth.share.send">Kirim</button>
+                </div>
+                <p class="status-msg error" id="share-email-err" role="alert"></p>
+              </form>
+              <form class="share-form" id="share-wa-form" novalidate hidden>
+                <div class="row">
+                  <label class="visually-hidden" for="share-wa" data-i18n="booth.share.whatsapp">WhatsApp</label>
+                  <input class="input" id="share-wa" type="tel" inputmode="tel" autocomplete="off" maxlength="24" placeholder="WhatsApp" data-i18n-attr="placeholder:booth.share.whatsapp" />
+                  <button type="submit" class="btn btn-primary" id="share-wa-send" disabled data-i18n="booth.share.send">Kirim</button>
+                </div>
+                <p class="status-msg error" id="share-wa-err" role="alert"></p>
+              </form>
+              <ul class="share-deliveries" id="share-deliveries" aria-live="polite" hidden></ul>
               <div class="share-out" id="share-out" hidden>
                 <p class="status-msg" id="share-status" role="status"></p>
                 <img id="share-qr-img" class="share-qr-img" width="240" height="240" alt="Kode QR halaman hasil" data-i18n-attr="alt:booth.share.qrAlt" hidden />

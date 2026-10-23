@@ -12,6 +12,7 @@ function deferred() {
 function setup() {
   const creates = [];
   const puts = [];
+  const calls = [];
   const api = {
     createResult: (form) => {
       const d = deferred();
@@ -21,11 +22,19 @@ function setup() {
     putAsset: async (token, key, kind, blob) => {
       puts.push({ token, key, kind, blob });
     },
+    postSend: async (token, key, body) => {
+      calls.push(['postSend', token, key, body]);
+      return { id: 7 };
+    },
+    getDeliveries: async (token, key) => {
+      calls.push(['getDeliveries', token, key]);
+      return [{ id: 7, channel: 'email', to: 'ri***@x.com', status: 'sent' }];
+    },
   };
   const share = createShareSession({ api, now: () => 0 });
   const reply = (i, token) =>
     creates[i].resolve({ token, key: `k-${token}`, url: `https://x/p/${token}`, expires_at: '2030-01-01T00:00:00Z' });
-  return { share, creates, puts, reply };
+  return { share, creates, puts, reply, calls };
 }
 const meta = { templateId: 1, lang: 'id' };
 
@@ -94,4 +103,60 @@ test('uploadAsset menunggu ensureResult selesai', async () => {
 test('uploadAsset tanpa hasil ditolak', async () => {
   const { share } = setup();
   await assert.rejects(share.uploadAsset('gif', {}));
+});
+
+test('send sebelum ada hasil: createResult lalu postSend berurutan', async () => {
+  const { share, creates, reply, calls } = setup();
+  const file = new File(['a'], 'a.jpg');
+  const p = share.send('email', 'a@x.com', { file, ...meta });
+  await Promise.resolve();
+  assert.equal(creates.length, 1);
+  assert.equal(calls.length, 0);
+  reply(0, 'AAA');
+  assert.deepEqual(await p, { id: 7 });
+  assert.deepEqual(calls, [['postSend', 'AAA', 'k-AAA', { channel: 'email', to: 'a@x.com' }]]);
+});
+
+test('send memakai hasil yang sudah ada tanpa unggah ulang', async () => {
+  const { share, creates, reply, calls } = setup();
+  const file = new File(['a'], 'a.jpg');
+  const p = share.ensureResult(file, meta);
+  reply(0, 'AAA');
+  await p;
+  await share.send('whatsapp', '62812', { file, ...meta });
+  assert.equal(creates.length, 1);
+  assert.equal(calls[0][3].channel, 'whatsapp');
+});
+
+test('reset di antara unggah dan kirim: postSend tidak dipanggil', async () => {
+  const { share, reply, calls } = setup();
+  const p = share.send('email', 'a@x.com', { file: new File(['a'], 'a.jpg'), ...meta });
+  share.reset();
+  reply(0, 'AAA');
+  await assert.rejects(p);
+  assert.equal(calls.length, 0);
+});
+
+test('deliveries kosong tanpa hasil, dan dibuang bila reset saat menunggu', async () => {
+  const { share, reply, calls } = setup();
+  assert.deepEqual(await share.deliveries(), []);
+  const p = share.ensureResult(new File(['a'], 'a.jpg'), meta);
+  reply(0, 'AAA');
+  await p;
+  assert.equal((await share.deliveries())[0].status, 'sent');
+  assert.deepEqual(calls.at(-1), ['getDeliveries', 'AAA', 'k-AAA']);
+  const pending = share.deliveries();
+  share.reset();
+  assert.deepEqual(await pending, []);
+});
+
+test('kirim otomatis hanya untuk File pertama sesi, dan dibuka lagi oleh reset', () => {
+  const { share } = setup();
+  const a = new File(['a'], 'a.jpg');
+  const b = new File(['b'], 'b.jpg');
+  assert.equal(share.claimAutoSend(a), true);
+  assert.equal(share.claimAutoSend(a), false);
+  assert.equal(share.claimAutoSend(b), false);
+  share.reset();
+  assert.equal(share.claimAutoSend(b), true);
 });

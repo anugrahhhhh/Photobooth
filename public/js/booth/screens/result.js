@@ -6,7 +6,7 @@ import { releaseCanvas, resetPhotos, logSessionOnce } from '../../state.js';
 import { render } from '../../strip.js';
 import { clearFilteredCache } from './adjust.js';
 import { resultButtonState } from '../result-view.js';
-import { enterPanel, initPanel, leavePanel, setShareReady } from '../share-panel.js';
+import { autoSend, enterPanel, initPanel, leavePanel, setShareReady } from '../share-panel.js';
 
 let phase = 'preparing';
 
@@ -79,6 +79,7 @@ async function enterResult(ctx) {
   if (ctx.visit() !== visit || !current) return;
   $('#result-img').src = current.url;
   setPhase('ready');
+  autoSend(ctx);
 }
 
 export async function download(ctx) {

@@ -18,7 +18,10 @@ function start(ctx) {
   if (ctx.kiosk() && document.fullscreenEnabled && !document.fullscreenElement) {
     document.documentElement.requestFullscreen().catch(() => {});
   }
-  ctx.go('pick', { mode: 'start' });
+  const s = ctx.settings;
+  const anyService = Boolean(s.share_email || s.share_whatsapp);
+  if (Number(s.contact_before) === 1 && anyService) ctx.go('contact');
+  else ctx.go('pick', { mode: 'start' });
 }
 
 export function init(ctx) {

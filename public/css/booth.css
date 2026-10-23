@@ -297,3 +297,22 @@ body.kiosk .welcome-kiosk {
 .share-url { margin: 0; font-weight: 700; word-break: break-all; text-align: center; user-select: text; }
 .consent-dialog { width: min(92vw, 360px); }
 .consent-dialog p { margin: 0 0 16px; }
+
+/* Kirim email/WhatsApp dan layar kontak */
+.share-form { width: 100%; display: grid; gap: 4px; }
+.share-form .status-msg, .contact .status-msg { margin: 0; min-height: 0; }
+.share-form .status-msg:empty, .contact .status-msg:empty { display: none; }
+.share-deliveries { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; width: 100%; }
+.share-delivery { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-weight: 600; }
+.share-delivery-to { color: var(--muted); font-weight: 400; word-break: break-all; }
+.share-delivery-status.sent { color: var(--success, #1a7f37); }
+.share-delivery-status.failed { color: var(--danger, #c62828); }
+.contact { max-width: 520px; margin: 4vh auto 0; display: grid; gap: 14px; }
+.contact h2, .contact p { margin: 0; }
+.contact-field { display: grid; gap: 6px; }
+.contact-field label { font-weight: 700; }
+.contact-consent { display: flex; align-items: flex-start; gap: 10px; min-height: var(--tap); }
+.contact-consent input { width: 24px; height: 24px; flex: none; margin-top: 2px; }
+.contact-actions .btn { flex: 1 1 140px; }
+.share-form .row { flex-wrap: nowrap; }
+.share-form .input { min-width: 0; }
