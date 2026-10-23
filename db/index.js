@@ -49,6 +49,36 @@ CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS results (
+  id          INTEGER PRIMARY KEY,
+  token       TEXT NOT NULL UNIQUE,
+  key_hash    TEXT NOT NULL,
+  template_id INTEGER,
+  lang        TEXT NOT NULL CHECK (lang IN ('id','en')),
+  base_url    TEXT NOT NULL,
+  has_gif     INTEGER NOT NULL DEFAULT 0,
+  video_type  TEXT,
+  bytes       INTEGER NOT NULL DEFAULT 0,
+  created_at  TEXT NOT NULL,
+  expires_at  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_results_expires_at ON results(expires_at);
+
+CREATE TABLE IF NOT EXISTS deliveries (
+  id               INTEGER PRIMARY KEY,
+  result_id        INTEGER NOT NULL REFERENCES results(id) ON DELETE CASCADE,
+  channel          TEXT NOT NULL CHECK (channel IN ('email','whatsapp')),
+  recipient        TEXT,
+  recipient_masked TEXT NOT NULL,
+  status           TEXT NOT NULL CHECK (status IN ('queued','sending','sent','failed')),
+  attempts         INTEGER NOT NULL DEFAULT 0,
+  next_attempt_at  TEXT NOT NULL,
+  last_error       TEXT,
+  created_at       TEXT NOT NULL,
+  sent_at          TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_deliveries_queue ON deliveries(status, next_attempt_at);
 `;
 
 export function openDb(dbPath) {
