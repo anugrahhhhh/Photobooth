@@ -4,11 +4,15 @@ const PHONE_RE = /^[1-9]\d{9,14}$/;
 const EMAIL_RE = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,}$/;
 const MAX_EMAIL = 254;
 
-// Buang semua selain angka. Awalan 00 dibuang, awalan 0 jadi 62, 0 tunggal setelah 62 dibuang. Hasil harus cocok PHONE_RE.
+// Buang semua selain angka. Awalan 00 dibuang (sisanya minimal 11 digit: kode negara + nomor),
+// awalan 0 jadi 62, 0 tunggal setelah 62 dibuang. Hasil harus cocok PHONE_RE.
 export function normalizePhone(input) {
   if (typeof input !== 'string') return null;
   let digits = input.replace(/\D/g, '');
-  if (digits.startsWith('00')) digits = digits.slice(2);
+  if (digits.startsWith('00')) {
+    digits = digits.slice(2);
+    if (digits.length < 11) return null;
+  }
   if (digits.startsWith('0')) digits = '62' + digits.slice(1);
   if (digits.startsWith('620')) digits = '62' + digits.slice(3);
   return PHONE_RE.test(digits) ? digits : null;

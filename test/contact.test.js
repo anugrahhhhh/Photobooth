@@ -47,3 +47,9 @@ test('isValidEmail menolak karakter yang membuat daftar alamat', () => {
   }
   assert.equal(isValidEmail('rina.putri+booth@gmail.com'), true);
 });
+
+test('normalizePhone: setelah awalan 00 dibuang, nomor kurang dari 11 digit ditolak', () => {
+  assert.equal(normalizePhone('008123456789'), null);
+  assert.equal(normalizePhone('0062 812 3456 7890'), '6281234567890');
+  assert.equal(normalizePhone('001 415 555 2671'), '14155552671');
+});
