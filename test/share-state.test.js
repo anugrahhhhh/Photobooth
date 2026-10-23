@@ -172,3 +172,42 @@ test('epoch naik hanya saat reset, tidak oleh hasil baru', async () => {
   share.reset();
   assert.equal(share.epoch(), e0 + 1);
 });
+
+test('attachGif: GIF diunggah setelah hasil dibuat untuk File yang sama', async () => {
+  const { share, puts, reply } = setup();
+  const file = new File(['a'], 'a.jpg');
+  const blob = { size: 1 };
+  share.attachGif(file, blob); // GIF selesai lebih dulu daripada hasil server
+  assert.equal(puts.length, 0);
+  const p = share.ensureResult(file, meta);
+  reply(0, 'AAA');
+  await p;
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(puts, [{ token: 'AAA', key: 'k-AAA', kind: 'gif', blob }]);
+});
+
+test('attachGif: langsung diunggah bila hasil sudah ada, dan tidak ganda', async () => {
+  const { share, puts, reply } = setup();
+  const file = new File(['a'], 'a.jpg');
+  const p = share.ensureResult(file, meta);
+  reply(0, 'AAA');
+  await p;
+  const blob = { size: 1 };
+  share.attachGif(file, blob);
+  share.attachGif(file, blob);
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(puts.length, 1);
+});
+
+test('attachGif: GIF untuk File lain atau setelah reset tidak diunggah', async () => {
+  const { share, puts, reply } = setup();
+  const file = new File(['a'], 'a.jpg');
+  const p = share.ensureResult(file, meta);
+  share.attachGif(new File(['b'], 'b.jpg'), { size: 1 });
+  reply(0, 'AAA');
+  await p;
+  share.reset();
+  share.attachGif(file, { size: 3 });
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(puts.length, 0);
+});

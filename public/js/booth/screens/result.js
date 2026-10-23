@@ -7,9 +7,67 @@ import { render } from '../../strip.js';
 import { goFirst } from './welcome.js';
 import { clearFilteredCache } from './adjust.js';
 import { resultButtonState } from '../result-view.js';
-import { autoSend, resumeStatus, enterPanel, initPanel, leavePanel, setShareReady } from '../share-panel.js';
+import { buildGif } from '../../media/gif.js';
+import { autoSend, resumeStatus, enterPanel, initPanel, leavePanel, setShareReady, setShareFileProvider } from '../share-panel.js';
 
 let phase = 'preparing';
+let tab = 'photo'; // 'photo' | 'gif'
+
+// GIF dibuat satu kali per File hasil. File baru (foto, transform, atau filter berubah) = GIF lama
+// dibuang; job menolak build lama yang selesai belakangan. Unggahan ke server lewat ctx.share.attachGif.
+const gif = { job: 0, forFile: null, file: null, url: null, status: 'idle' };
+
+function releaseGif() {
+  if (gif.url) URL.revokeObjectURL(gif.url);
+  Object.assign(gif, { job: gif.job + 1, forFile: null, file: null, url: null, status: 'idle' });
+}
+
+function gifReady() {
+  return tab === 'gif' && gif.status === 'ready';
+}
+
+function renderGif() {
+  const img = $('#gif-img');
+  if (gif.url) img.src = gif.url;
+  else img.removeAttribute('src');
+  const key = { building: 'booth.result.gifBuilding', failed: 'booth.result.gifError' }[gif.status] ?? null;
+  setMessage($('#gif-status'), key, gif.status === 'failed');
+  syncDownload();
+}
+
+function renderTabs() {
+  $('#tab-photo').setAttribute('aria-pressed', String(tab === 'photo'));
+  $('#tab-gif').setAttribute('aria-pressed', String(tab === 'gif'));
+  $('#result-img').hidden = tab !== 'photo';
+  $('#gif-view').hidden = tab !== 'gif';
+  syncDownload();
+}
+
+function syncDownload() {
+  const btn = $('#download');
+  if (phase === 'ready') btn.disabled = tab === 'gif' && gif.status !== 'ready';
+}
+
+async function startGif(ctx, forFile) {
+  releaseGif();
+  const job = gif.job;
+  gif.forFile = forFile;
+  gif.status = 'building';
+  renderGif();
+  const { template, photos, transforms, filter } = ctx.state;
+  try {
+    const blob = await buildGif({ template, photos: [...photos], transforms: [...transforms], filter });
+    if (job !== gif.job) return;
+    gif.file = new File([blob], `photobooth-${timestamp()}.gif`, { type: 'image/gif' });
+    gif.url = URL.createObjectURL(blob);
+    gif.status = 'ready';
+    ctx.share.attachGif(forFile, blob);
+  } catch {
+    if (job !== gif.job) return;
+    gif.status = 'failed'; // tab Foto tetap berfungsi
+  }
+  renderGif();
+}
 
 function setPhase(next) {
   phase = next;
@@ -18,15 +76,19 @@ function setPhase(next) {
   btn.dataset.i18n = key; // ikut berganti saat bahasa diubah
   btn.textContent = t(key);
   btn.disabled = disabled;
+  syncDownload();
   setShareReady(next === 'ready');
 }
 
+function setMessage(node, key, isError) {
+  if (key) node.dataset.i18n = key;
+  else delete node.dataset.i18n;
+  node.textContent = key ? t(key) : '';
+  node.className = isError ? 'status-msg error' : 'status-msg';
+}
+
 function setError(key) {
-  const status = $('#result-status');
-  if (key) status.dataset.i18n = key;
-  else delete status.dataset.i18n;
-  status.textContent = key ? t(key) : '';
-  status.className = key ? 'status-msg error' : 'status-msg';
+  setMessage($('#result-status'), key, Boolean(key));
 }
 
 function timestamp(d = new Date()) {
@@ -80,6 +142,8 @@ async function enterResult(ctx) {
   if (ctx.visit() !== visit || !current) return;
   $('#result-img').src = current.url;
   setPhase('ready');
+  if (gif.forFile !== current.file) startGif(ctx, current.file);
+  renderTabs();
   autoSend(ctx);
   resumeStatus(ctx);
 }
@@ -87,7 +151,7 @@ async function enterResult(ctx) {
 export async function download(ctx) {
   const current = ctx.result.current();
   if (!current) return;
-  const { file } = current;
+  const file = gifReady() ? gif.file : current.file;
   if (ctx.state.template) {
     const templateId = ctx.state.template.id;
     logSessionOnce(ctx.state, () => sendJSON('POST', '/api/sessions', { template_id: templateId })).catch(() => {});
@@ -125,6 +189,15 @@ export async function download(ctx) {
 
 export function init(ctx) {
   initPanel(ctx);
+  setShareFileProvider(() => (gifReady() ? gif.file : null));
+  $('#tab-photo').addEventListener('click', () => ((tab = 'photo'), renderTabs()));
+  $('#tab-gif').addEventListener('click', () => ((tab = 'gif'), renderTabs()));
+  ctx.onReset(() => {
+    releaseGif();
+    tab = 'photo';
+    renderGif();
+    renderTabs();
+  });
   $('#download').addEventListener('click', () => (phase === 'failed' ? enterResult(ctx) : download(ctx)));
   $('#back-to-adjust').addEventListener('click', () => ctx.go('adjust'));
   $('#restart').addEventListener('click', () => {

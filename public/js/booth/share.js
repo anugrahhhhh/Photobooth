@@ -35,6 +35,20 @@ export function createShareSession({ api = defaultApi, now = Date.now } = {}) {
   let version = 0;
   let entry = null; // { file, promise, result }
   let autoSentFor = null; // File yang sudah dikirim otomatis (hanya File pertama sesi)
+  let gif = null; // { file, blob }: GIF terbaru; diunggah bila hasil server untuk File yang sama ada atau nanti dibuat
+
+  // Unggah GIF bila cocok dengan hasil ini. Opsional: gagal diam-diam, halaman hasil tetap menampilkan foto.
+  async function pushGif(mine) {
+    const g = gif;
+    if (!g || g.file !== mine.file || !mine.result || mine.gifSent === g.blob) return;
+    mine.gifSent = g.blob;
+    const v = version;
+    try {
+      await api.putAsset(mine.result.token, mine.result.key, 'gif', g.blob);
+    } catch {
+      if (v === version && entry === mine) mine.gifSent = null; // boleh dicoba lagi
+    }
+  }
 
   function ensureResult(file, { templateId, lang }) {
     if (entry && entry.file === file) return entry.promise;
@@ -48,7 +62,10 @@ export function createShareSession({ api = defaultApi, now = Date.now } = {}) {
     mine.promise = api.createResult(form).then(
       (res) => {
         const result = { token: res.token, key: res.key, url: res.url, expiresAt: res.expires_at, at: now() };
-        if (v === version && entry === mine) mine.result = result;
+        if (v === version && entry === mine) {
+          mine.result = result;
+          pushGif(mine);
+        }
         return result;
       },
       (err) => {
@@ -67,6 +84,11 @@ export function createShareSession({ api = defaultApi, now = Date.now } = {}) {
     await mine.promise;
     if (v !== version || entry !== mine) return;
     await api.putAsset(mine.result.token, mine.result.key, kind, blob);
+  }
+
+  function attachGif(file, blob) {
+    gif = { file, blob };
+    if (entry && entry.file === file) pushGif(entry); // bila hasil belum jadi, ensureResult yang mengunggah
   }
 
   // Unggah dulu bila perlu, lalu antrekan. Reset di tengah jalan membatalkan kiriman.
@@ -88,6 +110,7 @@ export function createShareSession({ api = defaultApi, now = Date.now } = {}) {
   return {
     ensureResult,
     uploadAsset,
+    attachGif,
     send,
     deliveries,
     // Naik hanya saat reset: navigasi antar layar tidak membatalkan kiriman yang berjalan.
@@ -102,6 +125,7 @@ export function createShareSession({ api = defaultApi, now = Date.now } = {}) {
       version++;
       entry = null;
       autoSentFor = null;
+      gif = null;
     },
   };
 }

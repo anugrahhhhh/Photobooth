@@ -15,6 +15,7 @@ const CHANNELS = {
 };
 
 let ready = false;
+let shareFile = () => null; // file lain yang dibagikan (GIF bila tab GIF aktif)
 let pending = null; // aksi yang menunggu persetujuan
 let pollTimer = 0;
 let pollGen = 0;
@@ -69,6 +70,10 @@ function clearPanel() {
     setText($(c.err), null);
   }
   syncButtons();
+}
+
+export function setShareFileProvider(fn) {
+  shareFile = fn;
 }
 
 export function setShareReady(value) {
@@ -223,7 +228,7 @@ async function nativeShare(ctx) {
   const current = ctx.result.current();
   if (!current) return;
   try {
-    await navigator.share({ files: [current.file] });
+    await navigator.share({ files: [shareFile() ?? current.file] });
   } catch (err) {
     if (err.name === 'AbortError') return;
     $('#share-out').hidden = false;

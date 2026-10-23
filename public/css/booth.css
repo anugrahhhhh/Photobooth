@@ -156,6 +156,11 @@
   background: var(--surface);
 }
 .result img:not([src]) { visibility: hidden; min-height: 160px; }
+.result-view { display: grid; gap: 12px; justify-items: center; max-width: 100%; }
+.result-tabs { display: flex; gap: 8px; }
+.gif-view { display: grid; gap: 8px; justify-items: center; }
+.gif-view[hidden] { display: none; }
+.gif-view img:not([src]) { display: none; }
 .result-actions { display: grid; gap: 12px; justify-items: center; }
 
 @media (min-width: 800px) {

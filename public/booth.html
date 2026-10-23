@@ -240,7 +240,17 @@
       <section data-screen="result" hidden>
         <h2 class="visually-hidden" data-i18n="booth.steps.result">Unduh</h2>
         <div class="result">
-          <img id="result-img" alt="Hasil photostrip" data-i18n-attr="alt:booth.result.alt" />
+          <div class="result-view">
+            <div class="result-tabs" role="group" data-i18n-attr="aria-label:booth.result.tabs">
+              <button type="button" class="chip" id="tab-photo" aria-pressed="true" data-i18n="booth.result.tabPhoto">Foto</button>
+              <button type="button" class="chip" id="tab-gif" aria-pressed="false" data-i18n="booth.result.tabGif">GIF</button>
+            </div>
+            <img id="result-img" alt="Hasil photostrip" data-i18n-attr="alt:booth.result.alt" />
+            <div id="gif-view" class="gif-view" hidden>
+              <img id="gif-img" alt="GIF stop-motion" data-i18n-attr="alt:booth.result.gifAlt" />
+              <p class="status-msg" id="gif-status" role="status"></p>
+            </div>
+          </div>
           <div class="result-actions card">
             <button type="button" class="btn btn-primary btn-lg" id="download" disabled data-i18n="booth.result.preparing">Menyiapkan...</button>
             <div class="row">
